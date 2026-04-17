@@ -5,1036 +5,823 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Bureau Pro — Basile</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyDrrAj3cpSvdZVultT90Uxmp5j_iWGkNj8",
+    authDomain: "bureau-pro-nabajonas.firebaseapp.com",
+    projectId: "bureau-pro-nabajonas",
+    storageBucket: "bureau-pro-nabajonas.firebasestorage.app",
+    messagingSenderId: "507494919517",
+    appId: "1:507494919517:web:30a71533630b169f5f0cb4"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  window.db = db;
+  window.fbCollection = collection;
+  window.fbAddDoc = addDoc;
+  window.fbGetDocs = getDocs;
+  window.fbDeleteDoc = deleteDoc;
+  window.fbDoc = doc;
+  window.fbUpdateDoc = updateDoc;
+  window.fbOnSnapshot = onSnapshot;
+  window.fbQuery = query;
+  window.fbOrderBy = orderBy;
+
+  window.dispatchEvent(new Event('firebase-ready'));
+</script>
+
 <style>
 :root {
-  --bg: #0F1117; --bg2: #161820; --surface: #1C1F2B; --surface2: #232636; --surface3: #2A2E42;
-  --border: rgba(255,255,255,0.07); --border2: rgba(255,255,255,0.12);
-  --text: #F0EEE8; --text2: #9A98A0; --text3: #5C5A65;
-  --gold: #C9A84C; --gold-light: #F0D898; --gold-dim: rgba(201,168,76,0.12);
-  --teal: #2DD4BF; --teal-dim: rgba(45,212,191,0.1);
-  --blue: #60A5FA; --blue-dim: rgba(96,165,250,0.1);
-  --rose: #FB7185; --rose-dim: rgba(251,113,133,0.1);
-  --violet: #A78BFA; --violet-dim: rgba(167,139,250,0.1);
-  --amber: #FBB040; --amber-dim: rgba(251,176,64,0.1);
-  --green: #4ADE80; --green-dim: rgba(74,222,128,0.1);
-  --radius: 14px; --radius-sm: 8px;
+  --bg: #0F1117;
+  --bg2: #161820;
+  --surface: #1C1F2B;
+  --surface2: #232636;
+  --surface3: #2A2E42;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --text: #F0EEE8;
+  --text2: #9A98A0;
+  --text3: #5C5A65;
+  --gold: #C9A84C;
+  --gold-light: #F0D898;
+  --gold-dim: rgba(201,168,76,0.12);
+  --teal: #2DD4BF;
+  --teal-dim: rgba(45,212,191,0.1);
+  --blue: #60A5FA;
+  --blue-dim: rgba(96,165,250,0.1);
+  --rose: #FB7185;
+  --rose-dim: rgba(251,113,133,0.1);
+  --violet: #A78BFA;
+  --violet-dim: rgba(167,139,250,0.1);
+  --amber: #FBB040;
+  --amber-dim: rgba(251,176,64,0.1);
+  --green: #4ADE80;
+  --green-dim: rgba(74,222,128,0.1);
+  --radius: 14px;
+  --radius-sm: 8px;
 }
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;}
-body::before{content:'';position:fixed;top:-200px;left:-200px;width:600px;height:600px;background:radial-gradient(circle,rgba(201,168,76,0.05) 0%,transparent 70%);pointer-events:none;}
-body::after{content:'';position:fixed;bottom:-200px;right:-200px;width:500px;height:500px;background:radial-gradient(circle,rgba(45,212,191,0.04) 0%,transparent 70%);pointer-events:none;}
 
-.app{display:flex;height:100vh;}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.app { display: flex; height: 100vh; }
 
 /* SIDEBAR */
-.sidebar{width:220px;flex-shrink:0;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;padding:1.5rem 1rem;position:sticky;top:0;height:100vh;overflow-y:auto;}
-.logo{padding:0 0.5rem 1.5rem;border-bottom:1px solid var(--border);margin-bottom:1.5rem;}
-.logo-name{font-family:'Playfair Display',serif;font-size:20px;font-weight:600;color:var(--gold);line-height:1;}
-.logo-sub{font-size:11px;color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;margin-top:3px;}
-.nav{flex:1;display:flex;flex-direction:column;gap:4px;}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);cursor:pointer;font-size:13.5px;font-weight:400;color:var(--text2);transition:all 0.15s;border:none;background:none;width:100%;text-align:left;}
-.nav-item:hover{background:var(--surface2);color:var(--text);}
-.nav-item.active{background:var(--gold-dim);color:var(--gold);}
-.nav-icon{width:18px;text-align:center;font-size:14px;}
-.nav-badge{margin-left:auto;font-size:10px;font-weight:600;padding:1px 6px;border-radius:10px;background:var(--surface3);color:var(--text2);}
-.nav-item.active .nav-badge{background:var(--gold-dim);color:var(--gold);}
-.sidebar-date{padding:1rem 0.5rem 0;border-top:1px solid var(--border);}
-.s-date-num{font-family:'Playfair Display',serif;font-size:40px;color:var(--text);line-height:1;}
-.s-date-info{font-size:12px;color:var(--text3);margin-top:3px;}
+.sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem 1rem;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.logo { padding: 0 0.5rem 1.5rem; border-bottom: 1px solid var(--border); margin-bottom: 1.5rem; }
+.logo-name { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 600; color: var(--gold); }
+.logo-sub { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text3); margin-top: 2px; }
+
+.nav { display: flex; flex-direction: column; gap: 2px; flex: 1; }
+
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: var(--radius-sm);
+  font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 400;
+  color: var(--text2); background: none; border: none; cursor: pointer;
+  transition: all 0.15s; text-align: left; width: 100%;
+}
+.nav-item:hover { background: var(--surface2); color: var(--text); }
+.nav-item.active { background: var(--gold-dim); color: var(--gold); font-weight: 500; }
+.nav-icon { font-size: 14px; width: 18px; text-align: center; flex-shrink: 0; }
+.nav-badge {
+  margin-left: auto; background: var(--surface3); color: var(--text2);
+  font-size: 10px; padding: 1px 6px; border-radius: 10px; min-width: 20px; text-align: center;
+}
+.nav-item.active .nav-badge { background: rgba(201,168,76,0.2); color: var(--gold); }
+
+.sidebar-date { margin-top: auto; padding-top: 1rem; border-top: 1px solid var(--border); }
+.s-date-num { font-family: 'Playfair Display', serif; font-size: 36px; color: var(--text3); line-height: 1; }
+.s-date-info { font-size: 11px; color: var(--text3); margin-top: 2px; }
+
+/* SYNC STATUS */
+.sync-status {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 11px; color: var(--text3); padding: 8px 4px; margin-top: 8px;
+}
+.sync-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+.sync-dot.syncing { background: var(--amber); animation: pulse 1s infinite; }
+.sync-dot.error { background: var(--rose); }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
 
 /* MAIN */
-.main{flex:1;overflow-y:auto;padding:2rem 2rem 3rem;}
-.main::-webkit-scrollbar{width:5px;}
-.main::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:3px;}
+.main { flex: 1; overflow-y: auto; padding: 2rem; }
 
 /* VIEWS */
-.view{display:none;animation:fadeIn 0.2s ease;}
-.view.active{display:block;}
-@keyframes fadeIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+.view { display: none; }
+.view.active { display: block; }
 
-.view-header{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:1.75rem;}
-.view-title{font-family:'Playfair Display',serif;font-size:30px;font-weight:400;color:var(--text);}
-.view-title span{font-style:italic;color:var(--gold);}
+.view-header { margin-bottom: 1.75rem; }
+.view-title { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 400; color: var(--text); }
+.view-title span { font-style: italic; color: var(--gold); }
+.view-subtitle { font-size: 13px; color: var(--text3); margin-top: 4px; }
 
-/* DASHBOARD STATS */
-.dash-stats{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:1.75rem;}
-.dstat{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1rem 0.875rem;text-align:center;cursor:pointer;transition:border-color 0.15s;}
-.dstat:hover{border-color:var(--border2);}
-.dstat-num{font-family:'Playfair Display',serif;font-size:28px;font-weight:400;line-height:1;}
-.dstat-label{font-size:11px;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;margin-top:4px;}
-.dstat.c-teal .dstat-num{color:var(--teal);}
-.dstat.c-gold .dstat-num{color:var(--gold);}
-.dstat.c-rose .dstat-num{color:var(--rose);}
-.dstat.c-blue .dstat-num{color:var(--blue);}
-.dstat.c-violet .dstat-num{color:var(--violet);}
-.dstat.c-amber .dstat-num{color:var(--amber);}
+/* ADD FORM */
+.add-form {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1.5rem;
+}
+.add-form-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end; }
+.form-group { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 150px; }
+.form-label { font-size: 11px; color: var(--text3); letter-spacing: 0.06em; text-transform: uppercase; }
 
-.dash-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;}
-.dash-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;transition:border-color 0.15s;}
-.dash-card:hover{border-color:var(--border2);}
-.dash-card-header{display:flex;align-items:center;justify-content:space-between;padding:0.875rem 1rem;border-bottom:1px solid var(--border);cursor:pointer;}
-.dash-card-title{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:500;color:var(--text2);letter-spacing:0.04em;text-transform:uppercase;}
-.chip{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
-.dash-card-body{padding:0.875rem 1rem;max-height:200px;overflow-y:auto;}
-.dash-card-body::-webkit-scrollbar{width:3px;}
-.dash-card-body::-webkit-scrollbar-thumb{background:var(--surface3);border-radius:2px;}
-.mini-item{display:flex;align-items:flex-start;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:13px;color:var(--text);}
-.mini-item:last-child{border-bottom:none;}
-.mi-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;margin-top:5px;}
-.mi-text{flex:1;line-height:1.35;}
-.mi-date{font-size:11px;color:var(--text3);white-space:nowrap;}
-.go-btn{font-size:11px;padding:3px 10px;border-radius:6px;border:1px solid var(--border2);background:none;color:var(--text2);cursor:pointer;transition:all 0.15s;font-family:'Outfit',sans-serif;}
-.go-btn:hover{background:var(--surface2);color:var(--text);}
-.empty-mini{font-size:12px;color:var(--text3);text-align:center;padding:0.75rem 0;font-style:italic;}
+input, textarea, select {
+  font-family: 'Outfit', sans-serif; font-size: 13px;
+  background: var(--surface2); border: 1px solid var(--border2);
+  color: var(--text); border-radius: var(--radius-sm); padding: 8px 12px;
+  outline: none; transition: border-color 0.15s; width: 100%;
+}
+input:focus, textarea:focus, select:focus { border-color: var(--gold); }
+select option { background: var(--surface2); }
+textarea { resize: vertical; min-height: 70px; }
 
-/* FORMS */
-.add-form{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.25rem;margin-bottom:1.25rem;}
-.form-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
-.form-field{display:flex;flex-direction:column;gap:4px;flex:1;min-width:120px;}
-.form-field label{font-size:11px;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;}
-input[type="text"],input[type="date"],input[type="time"],input[type="tel"],select,textarea{font-family:'Outfit',sans-serif;font-size:13.5px;padding:8px 11px;border:1px solid var(--border2);border-radius:var(--radius-sm);background:var(--surface2);color:var(--text);outline:none;transition:border-color 0.15s,box-shadow 0.15s;width:100%;}
-input:focus,select:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,0.1);}
-textarea{resize:vertical;min-height:60px;}
-select option{background:var(--surface2);}
-.btn{font-family:'Outfit',sans-serif;font-size:13px;font-weight:500;padding:8px 18px;border-radius:var(--radius-sm);cursor:pointer;border:none;transition:all 0.15s;white-space:nowrap;}
-.btn-primary{background:var(--gold);color:#0F1117;}
-.btn-primary:hover{background:var(--gold-light);}
-.btn-ghost{background:none;border:1px solid var(--border2);color:var(--text2);}
-.btn-ghost:hover{background:var(--surface2);color:var(--text);}
-.btn-danger{background:none;border:1px solid rgba(251,113,133,0.3);color:var(--rose);font-size:12px;padding:5px 10px;}
-.btn-danger:hover{background:var(--rose-dim);}
+.btn {
+  font-family: 'Outfit', sans-serif; font-size: 13px; font-weight: 500;
+  padding: 9px 18px; border-radius: var(--radius-sm); border: none; cursor: pointer;
+  transition: all 0.15s; white-space: nowrap;
+}
+.btn-primary { background: var(--gold); color: #0F1117; }
+.btn-primary:hover { background: var(--gold-light); }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
 
-/* ITEMS */
-.items-list{display:flex;flex-direction:column;gap:8px;}
-.item-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;display:flex;align-items:flex-start;gap:12px;transition:border-color 0.15s,background 0.15s;animation:fadeIn 0.2s ease;}
-.item-card:hover{border-color:var(--border2);background:var(--surface2);}
-.item-card.done-card{opacity:0.5;}
-.item-card.done-card .ic-title{text-decoration:line-through;color:var(--text3);}
-.ic-check{width:20px;height:20px;border-radius:6px;border:1.5px solid var(--border2);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all 0.15s;margin-top:1px;}
-.ic-check:hover{border-color:var(--gold);}
-.ic-check.checked{background:var(--gold);border-color:var(--gold);color:#0F1117;}
-.ic-body{flex:1;min-width:0;}
-.ic-title{font-size:14.5px;color:var(--text);line-height:1.35;margin-bottom:3px;}
-.ic-meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:5px;}
-.ic-tag{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;}
-.tag-urgent{background:var(--rose-dim);color:var(--rose);border:1px solid rgba(251,113,133,0.2);}
-.tag-normal{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(251,176,64,0.2);}
-.tag-low{background:var(--teal-dim);color:var(--teal);border:1px solid rgba(45,212,191,0.2);}
-.tag-pending{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(251,176,64,0.2);}
-.tag-done{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,0.2);}
-.tag-cancelled{background:rgba(255,255,255,0.05);color:var(--text3);border:1px solid var(--border);}
-.tag-open{background:var(--rose-dim);color:var(--rose);border:1px solid rgba(251,113,133,0.2);}
-.tag-resolved{background:var(--green-dim);color:var(--green);border:1px solid rgba(74,222,128,0.2);}
-.tag-today{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(201,168,76,0.25);}
-.ic-actions{display:flex;gap:6px;flex-shrink:0;align-items:flex-start;margin-top:1px;}
-.empty-view{text-align:center;padding:3rem 1rem;color:var(--text3);font-size:14px;font-style:italic;}
+/* ITEMS LIST */
+.items-list { display: flex; flex-direction: column; gap: 10px; }
 
-/* CONTACTS */
-.contacts-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px;}
-.contact-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.25rem;display:flex;align-items:center;gap:12px;transition:border-color 0.15s;animation:fadeIn 0.2s ease;}
-.contact-card:hover{border-color:var(--border2);}
-.contact-avatar{width:40px;height:40px;border-radius:50%;background:var(--gold-dim);border:1px solid rgba(201,168,76,0.2);display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:16px;color:var(--gold);flex-shrink:0;}
-.contact-info{flex:1;min-width:0;}
-.contact-name{font-size:14px;font-weight:500;color:var(--text);}
-.contact-role{font-size:12px;color:var(--text3);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.contact-phone{font-size:12px;color:var(--teal);margin-top:3px;}
-.contact-actions{display:flex;gap:5px;}
-.icon-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--text3);transition:all 0.15s;}
-.icon-btn:hover{background:var(--surface2);color:var(--text);border-color:var(--border2);}
-.icon-btn.call:hover{background:var(--teal-dim);color:var(--teal);border-color:rgba(45,212,191,0.25);}
-.icon-btn.del:hover{background:var(--rose-dim);color:var(--rose);border-color:rgba(251,113,133,0.25);}
+.item-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1rem 1.25rem;
+  display: flex; align-items: flex-start; gap: 12px;
+  transition: border-color 0.15s;
+}
+.item-card:hover { border-color: var(--border2); }
 
-.filter-row{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;}
-.filter-btn{font-family:'Outfit',sans-serif;font-size:12px;padding:5px 12px;border-radius:20px;border:1px solid var(--border2);background:none;color:var(--text2);cursor:pointer;transition:all 0.15s;}
-.filter-btn:hover,.filter-btn.active{background:var(--gold-dim);color:var(--gold);border-color:rgba(201,168,76,0.3);}
+.item-check {
+  width: 18px; height: 18px; border-radius: 5px; border: 1.5px solid var(--border2);
+  flex-shrink: 0; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  margin-top: 2px; transition: all 0.15s;
+}
+.item-check.done { background: var(--green); border-color: var(--green); }
+.item-check.done::after { content: '✓'; font-size: 11px; color: #0F1117; font-weight: 700; }
 
-/* ===================== PLANNING ===================== */
-.planning-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;}
-.planning-nav{display:flex;align-items:center;gap:12px;}
-.nav-arrow{width:34px;height:34px;border-radius:var(--radius-sm);border:1px solid var(--border2);background:none;color:var(--text2);cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:all 0.15s;}
-.nav-arrow:hover{background:var(--surface2);color:var(--text);}
-.planning-period{font-size:15px;font-weight:500;color:var(--text);min-width:220px;text-align:center;}
-.today-btn{font-family:'Outfit',sans-serif;font-size:12px;padding:5px 14px;border-radius:20px;border:1px solid rgba(201,168,76,0.3);background:var(--gold-dim);color:var(--gold);cursor:pointer;transition:all 0.15s;}
-.today-btn:hover{background:var(--gold);color:#0F1117;}
+.item-body { flex: 1; }
+.item-title { font-size: 14px; font-weight: 500; color: var(--text); line-height: 1.3; }
+.item-title.done { text-decoration: line-through; color: var(--text3); }
+.item-meta { display: flex; gap: 10px; margin-top: 5px; flex-wrap: wrap; }
+.item-tag {
+  font-size: 11px; padding: 2px 8px; border-radius: 20px;
+  border: 1px solid var(--border2); color: var(--text2);
+}
+.item-tag.urgent { background: var(--rose-dim); color: var(--rose); border-color: rgba(251,113,133,0.25); }
+.item-tag.normal { background: var(--blue-dim); color: var(--blue); border-color: rgba(96,165,250,0.25); }
+.item-tag.low { background: var(--teal-dim); color: var(--teal); border-color: rgba(45,212,191,0.25); }
+.item-tag.date { background: var(--violet-dim); color: var(--violet); border-color: rgba(167,139,250,0.25); }
+.item-tag.status-open { background: var(--rose-dim); color: var(--rose); border-color: rgba(251,113,133,0.25); }
+.item-tag.status-progress { background: var(--amber-dim); color: var(--amber); border-color: rgba(251,176,64,0.25); }
+.item-tag.status-done { background: var(--green-dim); color: var(--green); border-color: rgba(74,222,128,0.25); }
 
-.view-toggle{display:flex;gap:4px;}
-.vtbtn{font-family:'Outfit',sans-serif;font-size:12px;padding:5px 14px;border-radius:20px;border:1px solid var(--border2);background:none;color:var(--text2);cursor:pointer;transition:all 0.15s;}
-.vtbtn.active{background:var(--gold-dim);color:var(--gold);border-color:rgba(201,168,76,0.3);}
+.item-notes { font-size: 12px; color: var(--text3); margin-top: 5px; line-height: 1.5; }
 
-/* WEEK GRID */
-.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:1.5rem;}
+.item-actions { display: flex; gap: 6px; flex-shrink: 0; }
+.icon-btn {
+  width: 30px; height: 30px; border-radius: 6px; border: 1px solid var(--border);
+  background: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  font-size: 13px; color: var(--text3); transition: all 0.15s;
+}
+.icon-btn:hover { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+.icon-btn.del:hover { background: var(--rose-dim); color: var(--rose); border-color: rgba(251,113,133,0.25); }
 
-.day-col{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);min-height:280px;display:flex;flex-direction:column;transition:border-color 0.2s;}
-.day-col.today-col{border-color:rgba(201,168,76,0.4);background:rgba(201,168,76,0.03);}
-.day-col.drag-over{border-color:var(--teal);background:rgba(45,212,191,0.05);}
+/* DASHBOARD */
+.dash-stats {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; margin-bottom: 1.75rem;
+}
+.dstat {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1rem 1.25rem; cursor: pointer; transition: all 0.15s;
+}
+.dstat:hover { border-color: var(--border2); transform: translateY(-1px); }
+.dstat-num { font-family: 'Playfair Display', serif; font-size: 32px; font-weight: 600; line-height: 1; }
+.dstat-label { font-size: 11px; color: var(--text2); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+.dstat.c-gold .dstat-num { color: var(--gold); }
+.dstat.c-teal .dstat-num { color: var(--teal); }
+.dstat.c-rose .dstat-num { color: var(--rose); }
+.dstat.c-blue .dstat-num { color: var(--blue); }
+.dstat.c-amber .dstat-num { color: var(--amber); }
+.dstat.c-violet .dstat-num { color: var(--violet); }
 
-.day-head{padding:10px 10px 8px;border-bottom:1px solid var(--border);text-align:center;}
-.day-name{font-size:11px;color:var(--text3);letter-spacing:0.07em;text-transform:uppercase;}
-.day-num{font-family:'Playfair Display',serif;font-size:22px;line-height:1.1;color:var(--text);margin-top:2px;}
-.today-col .day-num{color:var(--gold);}
-.day-month{font-size:10px;color:var(--text3);}
+.dash-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+.dash-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.dash-card-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); cursor: pointer; }
+.dash-card-title { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 500; color: var(--text2); }
+.chip { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.go-btn { font-size: 11px; color: var(--text3); background: none; border: none; cursor: pointer; transition: color 0.15s; }
+.go-btn:hover { color: var(--gold); }
+.dash-card-body { padding: 1rem 1.25rem; min-height: 80px; }
+.dash-empty { font-size: 12px; color: var(--text3); font-style: italic; }
+.dash-item { font-size: 13px; color: var(--text); padding: 5px 0; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; }
+.dash-item:last-child { border-bottom: none; }
+.dash-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
 
-.day-body{flex:1;padding:6px;display:flex;flex-direction:column;gap:4px;overflow-y:auto;}
-.day-body::-webkit-scrollbar{width:2px;}
-.day-body::-webkit-scrollbar-thumb{background:var(--surface3);}
+/* EMPTY STATE */
+.empty-state { text-align: center; padding: 3rem 1rem; color: var(--text3); }
+.empty-icon { font-size: 32px; margin-bottom: 8px; opacity: 0.5; }
+.empty-text { font-size: 13px; }
 
-.day-add-btn{width:100%;padding:5px;border-radius:6px;border:1px dashed var(--border2);background:none;color:var(--text3);font-size:11px;cursor:pointer;font-family:'Outfit',sans-serif;transition:all 0.15s;margin-top:auto;}
-.day-add-btn:hover{border-color:var(--gold);color:var(--gold);background:var(--gold-dim);}
-
-/* EVENTS */
-.event-pill{padding:4px 7px;border-radius:6px;font-size:11.5px;cursor:grab;line-height:1.3;position:relative;transition:transform 0.1s,opacity 0.1s;}
-.event-pill:active{cursor:grabbing;transform:scale(0.97);opacity:0.8;}
-.event-pill.ev-task{background:rgba(45,212,191,0.12);border:1px solid rgba(45,212,191,0.2);color:var(--teal);}
-.event-pill.ev-rdv{background:rgba(96,165,250,0.12);border:1px solid rgba(96,165,250,0.2);color:var(--blue);}
-.event-pill.ev-event{background:rgba(167,139,250,0.12);border:1px solid rgba(167,139,250,0.2);color:var(--violet);}
-.event-pill.ev-urgent{background:rgba(251,113,133,0.12);border:1px solid rgba(251,113,133,0.2);color:var(--rose);}
-.event-pill.done-pill{opacity:0.4;text-decoration:line-through;}
-
-.pill-top{display:flex;align-items:flex-start;gap:4px;}
-.pill-text{flex:1;word-break:break-word;}
-.pill-del{opacity:0;font-size:12px;cursor:pointer;padding:0 2px;transition:opacity 0.15s;}
-.event-pill:hover .pill-del{opacity:1;}
-.pill-time{font-size:10px;opacity:0.7;margin-top:1px;}
-
-/* MONTH GRID */
-.month-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border);}
-.month-day-head{background:var(--bg2);padding:8px;text-align:center;font-size:11px;color:var(--text3);letter-spacing:0.07em;text-transform:uppercase;}
-.month-cell{background:var(--surface);min-height:90px;padding:6px;transition:background 0.15s;cursor:pointer;}
-.month-cell:hover{background:var(--surface2);}
-.month-cell.today-cell{background:rgba(201,168,76,0.05);}
-.month-cell.other-month{opacity:0.4;}
-.month-cell.drag-over{background:rgba(45,212,191,0.05);}
-.mc-num{font-size:13px;font-weight:500;color:var(--text2);margin-bottom:4px;}
-.today-cell .mc-num{color:var(--gold);font-weight:600;}
-.mc-events{display:flex;flex-direction:column;gap:2px;}
-.mc-pill{font-size:10px;padding:2px 6px;border-radius:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.mc-more{font-size:10px;color:var(--text3);margin-top:2px;}
-
-/* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100;display:flex;align-items:center;justify-content:center;animation:fadeIn 0.15s ease;}
-.modal-overlay.hidden{display:none;}
-.modal{background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius);padding:1.5rem;width:440px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,0.4);}
-.modal-title{font-family:'Playfair Display',serif;font-size:20px;font-weight:400;color:var(--text);margin-bottom:1.25rem;}
-.modal-title span{font-style:italic;color:var(--gold);}
-.modal-field{display:flex;flex-direction:column;gap:5px;margin-bottom:12px;}
-.modal-field label{font-size:11px;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;}
-.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem;}
+/* LOADING */
+.loading { text-align: center; padding: 2rem; color: var(--text3); font-size: 13px; }
 </style>
 </head>
 <body>
+
 <div class="app">
-
-<!-- SIDEBAR -->
-<aside class="sidebar">
-  <div class="logo">
-    <div class="logo-name">Basile</div>
-    <div class="logo-sub">Bureau Pro</div>
-  </div>
-  <nav class="nav">
-    <button class="nav-item" onclick="showView('dashboard')"><span class="nav-icon">◈</span>Tableau de bord</button>
-    <button class="nav-item active" onclick="showView('planning')"><span class="nav-icon">🗓</span>Planning<span class="nav-badge" id="nb-planning">0</span></button>
-    <button class="nav-item" onclick="showView('tasks')"><span class="nav-icon">✓</span>Tâches<span class="nav-badge" id="nb-tasks">0</span></button>
-    <button class="nav-item" onclick="showView('orders')"><span class="nav-icon">📋</span>Commandes<span class="nav-badge" id="nb-orders">0</span></button>
-    <button class="nav-item" onclick="showView('rdv')"><span class="nav-icon">📅</span>Rendez-vous<span class="nav-badge" id="nb-rdv">0</span></button>
-    <button class="nav-item" onclick="showView('situations')"><span class="nav-icon">⚡</span>Situations<span class="nav-badge" id="nb-sit">0</span></button>
-    <button class="nav-item" onclick="showView('calls')"><span class="nav-icon">📞</span>À appeler<span class="nav-badge" id="nb-calls">0</span></button>
-    <button class="nav-item" onclick="showView('contacts')"><span class="nav-icon">👤</span>Contacts<span class="nav-badge" id="nb-contacts">0</span></button>
-    <button class="nav-item" onclick="showView('needs')"><span class="nav-icon">📝</span>Besoins dép.<span class="nav-badge" id="nb-needs">0</span></button>
-    <button class="nav-item" onclick="showView('thoughts')"><span class="nav-icon">✦</span>Pensées<span class="nav-badge" id="nb-thoughts">0</span></button>
-  </nav>
-  <div class="sidebar-date">
-    <div class="s-date-num" id="sDateNum"></div>
-    <div class="s-date-info" id="sDateInfo"></div>
-  </div>
-</aside>
-
-<!-- MAIN -->
-<main class="main">
-
-  <!-- DASHBOARD -->
-  <div class="view" id="view-dashboard">
-    <div class="view-header"><div class="view-title">Bonjour, <span>Basile</span></div></div>
-    <div class="dash-stats">
-      <div class="dstat c-teal" onclick="showView('tasks')"><div class="dstat-num" id="ds-tasks">0</div><div class="dstat-label">Tâches</div></div>
-      <div class="dstat c-gold" onclick="showView('orders')"><div class="dstat-num" id="ds-orders">0</div><div class="dstat-label">Commandes</div></div>
-      <div class="dstat c-blue" onclick="showView('rdv')"><div class="dstat-num" id="ds-rdv">0</div><div class="dstat-label">Rendez-vous</div></div>
-      <div class="dstat c-rose" onclick="showView('situations')"><div class="dstat-num" id="ds-sit">0</div><div class="dstat-label">Situations</div></div>
-      <div class="dstat c-amber" onclick="showView('calls')"><div class="dstat-num" id="ds-calls">0</div><div class="dstat-label">À appeler</div></div>
-      <div class="dstat c-violet" onclick="showView('needs')"><div class="dstat-num" id="ds-needs">0</div><div class="dstat-label">Besoins</div></div>
-      <div class="dstat c-violet" onclick="showView('planning')"><div class="dstat-num" id="ds-events">0</div><div class="dstat-label">Événements</div></div>
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-name">Basile</div>
+      <div class="logo-sub">Bureau Pro</div>
     </div>
-    <div class="dash-grid">
-      <div class="dash-card"><div class="dash-card-header" onclick="showView('planning')"><div class="dash-card-title"><span class="chip" style="background:var(--violet)"></span>Cette semaine</div><button class="go-btn">Planning →</button></div><div class="dash-card-body" id="dash-week"></div></div>
-      <div class="dash-card"><div class="dash-card-header" onclick="showView('tasks')"><div class="dash-card-title"><span class="chip" style="background:var(--teal)"></span>Tâches urgentes</div><button class="go-btn">Voir tout →</button></div><div class="dash-card-body" id="dash-tasks"></div></div>
-      <div class="dash-card"><div class="dash-card-header" onclick="showView('situations')"><div class="dash-card-title"><span class="chip" style="background:var(--rose)"></span>Situations ouvertes</div><button class="go-btn">Voir tout →</button></div><div class="dash-card-body" id="dash-sit"></div></div>
-      <div class="dash-card"><div class="dash-card-header" onclick="showView('orders')"><div class="dash-card-title"><span class="chip" style="background:var(--gold)"></span>Bons de commande</div><button class="go-btn">Voir tout →</button></div><div class="dash-card-body" id="dash-orders"></div></div>
-      <div class="dash-card"><div class="dash-card-header" onclick="showView('calls')"><div class="dash-card-title"><span class="chip" style="background:var(--amber)"></span>À appeler</div><button class="go-btn">Voir tout →</button></div><div class="dash-card-body" id="dash-calls"></div></div>
-      <div class="dash-card"><div class="dash-card-header" onclick="showView('needs')"><div class="dash-card-title"><span class="chip" style="background:var(--green)"></span>Besoins urgents</div><button class="go-btn">Voir tout →</button></div><div class="dash-card-body" id="dash-needs"></div></div>
-      <div class="dash-card"><div class="dash-card-header" onclick="showView('thoughts')"><div class="dash-card-title"><span class="chip" style="background:var(--violet)"></span>Dernières pensées</div><button class="go-btn">Voir tout →</button></div><div class="dash-card-body" id="dash-thoughts"></div></div>
+    <nav class="nav">
+      <button class="nav-item active" onclick="showView('dashboard')"><span class="nav-icon">◈</span> Tableau de bord</button>
+      <button class="nav-item" onclick="showView('tasks')"><span class="nav-icon">✓</span> Tâches <span class="nav-badge" id="nb-tasks">0</span></button>
+      <button class="nav-item" onclick="showView('orders')"><span class="nav-icon">📋</span> Commandes <span class="nav-badge" id="nb-orders">0</span></button>
+      <button class="nav-item" onclick="showView('rdv')"><span class="nav-icon">📅</span> Rendez-vous <span class="nav-badge" id="nb-rdv">0</span></button>
+      <button class="nav-item" onclick="showView('situations')"><span class="nav-icon">⚡</span> Situations <span class="nav-badge" id="nb-sit">0</span></button>
+      <button class="nav-item" onclick="showView('calls')"><span class="nav-icon">📞</span> À appeler <span class="nav-badge" id="nb-calls">0</span></button>
+      <button class="nav-item" onclick="showView('contacts')"><span class="nav-icon">👤</span> Contacts <span class="nav-badge" id="nb-contacts">0</span></button>
+      <button class="nav-item" onclick="showView('thoughts')"><span class="nav-icon">✦</span> Pensées <span class="nav-badge" id="nb-thoughts">0</span></button>
+      <button class="nav-item" onclick="showView('needs')"><span class="nav-icon">📝</span> Besoins <span class="nav-badge" id="nb-needs">0</span></button>
+    </nav>
+    <div class="sync-status">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-text">Connexion...</span>
     </div>
-  </div>
+    <div class="sidebar-date">
+      <div class="s-date-num" id="sDateNum"></div>
+      <div class="s-date-info" id="sDateInfo"></div>
+    </div>
+  </aside>
 
-  <!-- PLANNING -->
-  <div class="view active" id="view-planning">
-    <div class="view-header">
-      <div class="view-title">Planning <span>hebdomadaire</span></div>
-      <div style="display:flex;gap:10px;align-items:center;">
-        <div class="view-toggle">
-          <button class="vtbtn active" id="vt-week" onclick="setCalView('week')">Semaine</button>
-          <button class="vtbtn" id="vt-month" onclick="setCalView('month')">Mois</button>
+  <!-- MAIN -->
+  <main class="main">
+
+    <!-- DASHBOARD -->
+    <div class="view active" id="view-dashboard">
+      <div class="view-header">
+        <div class="view-title">Bonjour, <span>Basile</span></div>
+        <div class="view-subtitle" id="dash-date"></div>
+      </div>
+      <div class="dash-stats">
+        <div class="dstat c-teal" onclick="showView('tasks')"><div class="dstat-num" id="ds-tasks">0</div><div class="dstat-label">Tâches</div></div>
+        <div class="dstat c-gold" onclick="showView('orders')"><div class="dstat-num" id="ds-orders">0</div><div class="dstat-label">Commandes</div></div>
+        <div class="dstat c-blue" onclick="showView('rdv')"><div class="dstat-num" id="ds-rdv">0</div><div class="dstat-label">Rendez-vous</div></div>
+        <div class="dstat c-rose" onclick="showView('situations')"><div class="dstat-num" id="ds-sit">0</div><div class="dstat-label">Situations</div></div>
+        <div class="dstat c-amber" onclick="showView('calls')"><div class="dstat-num" id="ds-calls">0</div><div class="dstat-label">À appeler</div></div>
+        <div class="dstat c-violet" onclick="showView('contacts')"><div class="dstat-num" id="ds-contacts">0</div><div class="dstat-label">Contacts</div></div>
+      </div>
+      <div class="dash-grid">
+        <div class="dash-card">
+          <div class="dash-card-header" onclick="showView('tasks')">
+            <div class="dash-card-title"><span class="chip" style="background:var(--teal)"></span>Tâches récentes</div>
+            <button class="go-btn">Voir →</button>
+          </div>
+          <div class="dash-card-body" id="dash-tasks-body"><div class="dash-empty">Aucune tâche</div></div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-header" onclick="showView('situations')">
+            <div class="dash-card-title"><span class="chip" style="background:var(--rose)"></span>Situations ouvertes</div>
+            <button class="go-btn">Voir →</button>
+          </div>
+          <div class="dash-card-body" id="dash-sit-body"><div class="dash-empty">Aucune situation</div></div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-header" onclick="showView('rdv')">
+            <div class="dash-card-title"><span class="chip" style="background:var(--blue)"></span>Prochains rendez-vous</div>
+            <button class="go-btn">Voir →</button>
+          </div>
+          <div class="dash-card-body" id="dash-rdv-body"><div class="dash-empty">Aucun rendez-vous</div></div>
+        </div>
+        <div class="dash-card">
+          <div class="dash-card-header" onclick="showView('calls')">
+            <div class="dash-card-title"><span class="chip" style="background:var(--amber)"></span>Personnes à appeler</div>
+            <button class="go-btn">Voir →</button>
+          </div>
+          <div class="dash-card-body" id="dash-calls-body"><div class="dash-empty">Personne à appeler</div></div>
         </div>
       </div>
     </div>
-    <div class="planning-header">
-      <div class="planning-nav">
-        <button class="nav-arrow" onclick="navCal(-1)">‹</button>
-        <span class="planning-period" id="calPeriod"></span>
-        <button class="nav-arrow" onclick="navCal(1)">›</button>
-      </div>
-      <button class="today-btn" onclick="goToday()">Aujourd'hui</button>
-    </div>
-    <div id="cal-week-container"></div>
-    <div id="cal-month-container" style="display:none;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;"></div>
-  </div>
 
-  <!-- TÂCHES -->
-  <div class="view" id="view-tasks">
-    <div class="view-header"><div class="view-title">Tâches <span>à accomplir</span></div></div>
-    <div class="add-form">
-      <div class="form-row">
-        <div class="form-field" style="flex:2"><label>Tâche</label><input type="text" id="t-text" placeholder="Description..."/></div>
-        <div class="form-field" style="flex:0.7"><label>Priorité</label><select id="t-prio"><option value="urgent">⚡ Urgent</option><option value="normal" selected>· Normal</option><option value="low">↓ Bas</option></select></div>
-        <div class="form-field" style="flex:0.7"><label>Échéance</label><input type="date" id="t-date"/></div>
-        <div style="align-self:flex-end"><button class="btn btn-primary" onclick="addTask()">Ajouter</button></div>
+    <!-- TÂCHES -->
+    <div class="view" id="view-tasks">
+      <div class="view-header">
+        <div class="view-title">Tâches <span>à accomplir</span></div>
       </div>
-    </div>
-    <div class="filter-row">
-      <button class="filter-btn active" onclick="filterItems('tasks','all',this)">Tout</button>
-      <button class="filter-btn" onclick="filterItems('tasks','pending',this)">En cours</button>
-      <button class="filter-btn" onclick="filterItems('tasks','done',this)">Complétées</button>
-      <button class="filter-btn" onclick="filterItems('tasks','urgent',this)">Urgentes</button>
-    </div>
-    <div class="items-list" id="task-list"></div>
-  </div>
-
-  <!-- COMMANDES -->
-  <div class="view" id="view-orders">
-    <div class="view-header"><div class="view-title">Bons de <span>commande</span></div></div>
-    <div class="add-form">
-      <div class="form-row">
-        <div class="form-field" style="flex:2"><label>Objet</label><input type="text" id="o-text" placeholder="Ex: Matériel informatique..."/></div>
-        <div class="form-field"><label>Fournisseur</label><input type="text" id="o-supplier" placeholder="Fournisseur..."/></div>
-        <div class="form-field" style="flex:0.6"><label>Montant (FCFA)</label><input type="text" id="o-amount" placeholder="0"/></div>
-        <div class="form-field" style="flex:0.6"><label>Statut</label><select id="o-status"><option value="pending">En attente</option><option value="done">Validé</option><option value="cancelled">Annulé</option></select></div>
-        <div style="align-self:flex-end"><button class="btn btn-primary" onclick="addOrder()">Ajouter</button></div>
-      </div>
-    </div>
-    <div class="filter-row">
-      <button class="filter-btn active" onclick="filterItems('orders','all',this)">Tout</button>
-      <button class="filter-btn" onclick="filterItems('orders','pending',this)">En attente</button>
-      <button class="filter-btn" onclick="filterItems('orders','done',this)">Validés</button>
-    </div>
-    <div class="items-list" id="order-list"></div>
-  </div>
-
-  <!-- RDV -->
-  <div class="view" id="view-rdv">
-    <div class="view-header"><div class="view-title">Rendez-<span>vous</span></div></div>
-    <div class="add-form">
-      <div class="form-row">
-        <div class="form-field" style="flex:2"><label>Objet</label><input type="text" id="r-text" placeholder="Ex: Réunion avec M. Pouplin..."/></div>
-        <div class="form-field"><label>Lieu / Lien</label><input type="text" id="r-place" placeholder="Bureau, Teams..."/></div>
-        <div class="form-field" style="flex:0.7"><label>Date</label><input type="date" id="r-date"/></div>
-        <div class="form-field" style="flex:0.5"><label>Heure</label><input type="time" id="r-time"/></div>
-        <div style="align-self:flex-end"><button class="btn btn-primary" onclick="addRdv()">Ajouter</button></div>
-      </div>
-    </div>
-    <div class="items-list" id="rdv-list"></div>
-  </div>
-
-  <!-- SITUATIONS -->
-  <div class="view" id="view-situations">
-    <div class="view-header"><div class="view-title">Situations <span>à régler</span></div></div>
-    <div class="add-form">
-      <div class="form-row">
-        <div class="form-field" style="flex:2"><label>Situation</label><input type="text" id="s-text" placeholder="Décrivez..."/></div>
-        <div class="form-field"><label>Concerne</label><input type="text" id="s-who" placeholder="Structure / personne..."/></div>
-        <div class="form-field" style="flex:0.6"><label>Urgence</label><select id="s-prio"><option value="urgent">⚡ Urgent</option><option value="normal" selected>· Normal</option><option value="low">↓ Bas</option></select></div>
-        <div class="form-field" style="flex:0.6"><label>Statut</label><select id="s-status"><option value="open">Ouvert</option><option value="resolved">Résolu</option></select></div>
-        <div style="align-self:flex-end"><button class="btn btn-primary" onclick="addSituation()">Ajouter</button></div>
-      </div>
-    </div>
-    <div class="filter-row">
-      <button class="filter-btn active" onclick="filterItems('situations','all',this)">Tout</button>
-      <button class="filter-btn" onclick="filterItems('situations','open',this)">Ouverts</button>
-      <button class="filter-btn" onclick="filterItems('situations','resolved',this)">Résolus</button>
-    </div>
-    <div class="items-list" id="sit-list"></div>
-  </div>
-
-  <!-- CALLS -->
-  <div class="view" id="view-calls">
-    <div class="view-header"><div class="view-title">Personnes <span>à appeler</span></div></div>
-    <div class="add-form">
-      <div class="form-row">
-        <div class="form-field" style="flex:2"><label>Nom / Structure</label><input type="text" id="ca-name" placeholder="Ex: M. Pouplin — CISC..."/></div>
-        <div class="form-field"><label>Téléphone</label><input type="tel" id="ca-phone" placeholder="+225 ..."/></div>
-        <div class="form-field" style="flex:1.5"><label>Motif</label><input type="text" id="ca-reason" placeholder="Objet de l'appel..."/></div>
-        <div class="form-field" style="flex:0.5"><label>Priorité</label><select id="ca-prio"><option value="urgent">⚡ Urgent</option><option value="normal" selected>· Normal</option></select></div>
-        <div style="align-self:flex-end"><button class="btn btn-primary" onclick="addCall()">Ajouter</button></div>
-      </div>
-    </div>
-    <div class="items-list" id="call-list"></div>
-  </div>
-
-  <!-- CONTACTS -->
-  <div class="view" id="view-contacts">
-    <div class="view-header"><div class="view-title">Contacts <span>rapides</span></div></div>
-    <div class="add-form">
-      <div class="form-row">
-        <div class="form-field"><label>Nom complet</label><input type="text" id="ct-name" placeholder="Nom..."/></div>
-        <div class="form-field"><label>Rôle / Structure</label><input type="text" id="ct-role" placeholder="Ex: DG CISC..."/></div>
-        <div class="form-field"><label>Téléphone</label><input type="tel" id="ct-phone" placeholder="+225 ..."/></div>
-        <div class="form-field"><label>Email</label><input type="text" id="ct-email" placeholder="email@..."/></div>
-        <div style="align-self:flex-end"><button class="btn btn-primary" onclick="addContact()">Ajouter</button></div>
-      </div>
-    </div>
-    <div class="contacts-grid" id="contact-list"></div>
-  </div>
-
-  <!-- BESOINS DÉPARTEMENTS -->
-  <div class="view" id="view-needs">
-    <div class="view-header"><div class="view-title">Besoins <span>départements</span></div></div>
-    <div class="add-form">
-      <div class="form-row">
-        <div class="form-field" style="flex:1.2">
-          <label>Département</label>
-          <input type="text" id="nd-dept" placeholder="Ex: MIEVEL, CISC, 911 SECURITY..."/>
+      <div class="add-form">
+        <div class="add-form-row">
+          <div class="form-group" style="flex:2">
+            <label class="form-label">Tâche</label>
+            <input type="text" id="task-title" placeholder="Décrivez la tâche...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Priorité</label>
+            <select id="task-priority">
+              <option value="urgent">🔴 Urgent</option>
+              <option value="normal" selected>🔵 Normal</option>
+              <option value="low">🟢 Faible</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Échéance</label>
+            <input type="date" id="task-date">
+          </div>
+          <button class="btn btn-primary" onclick="addItem('tasks')">+ Ajouter</button>
         </div>
-        <div class="form-field" style="flex:2.5">
-          <label>Expression du besoin</label>
-          <input type="text" id="nd-text" placeholder="Décrivez le besoin du département..."/>
-        </div>
-        <div class="form-field" style="flex:0.7">
-          <label>Priorité</label>
-          <select id="nd-prio">
-            <option value="urgent">⚡ Urgent</option>
-            <option value="normal" selected>· Normal</option>
-            <option value="low">↓ Bas</option>
-          </select>
-        </div>
-        <div class="form-field" style="flex:0.7">
-          <label>Statut</label>
-          <select id="nd-status">
-            <option value="open">En attente</option>
-            <option value="inprogress">En cours</option>
-            <option value="done">Traité</option>
-          </select>
-        </div>
-        <div class="form-field" style="flex:0.7">
-          <label>Échéance</label>
-          <input type="date" id="nd-date"/>
-        </div>
-        <div style="align-self:flex-end"><button class="btn btn-primary" onclick="addNeed()">Ajouter</button></div>
       </div>
+      <div class="items-list" id="list-tasks"><div class="loading">Chargement...</div></div>
     </div>
-    <div class="filter-row">
-      <button class="filter-btn active" onclick="filterNeeds('all',this)">Tout</button>
-      <button class="filter-btn" onclick="filterNeeds('open',this)">En attente</button>
-      <button class="filter-btn" onclick="filterNeeds('inprogress',this)">En cours</button>
-      <button class="filter-btn" onclick="filterNeeds('done',this)">Traités</button>
-      <button class="filter-btn" onclick="filterNeeds('urgent',this)">Urgents</button>
-    </div>
-    <div id="needs-dept-tabs" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem;"></div>
-    <div class="items-list" id="need-list"></div>
-  </div>
 
-  <!-- PENSÉES -->
-  <div class="view" id="view-thoughts">
-    <div class="view-header"><div class="view-title">Pensées <span>& Notes</span></div></div>
-    <div class="add-form">
-      <div class="form-row">
-        <div class="form-field" style="flex:3"><label>Pensée / Note</label><input type="text" id="th-text" placeholder="Une idée, une réflexion..."/></div>
-        <div style="align-self:flex-end"><button class="btn btn-primary" onclick="addThought()">Ajouter</button></div>
+    <!-- COMMANDES -->
+    <div class="view" id="view-orders">
+      <div class="view-header">
+        <div class="view-title">Bons de <span>commande</span></div>
       </div>
+      <div class="add-form">
+        <div class="add-form-row">
+          <div class="form-group" style="flex:2">
+            <label class="form-label">Objet / Produit</label>
+            <input type="text" id="order-title" placeholder="Description de la commande...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Fournisseur</label>
+            <input type="text" id="order-supplier" placeholder="Fournisseur">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Statut</label>
+            <select id="order-status">
+              <option value="pending">En attente</option>
+              <option value="progress">En cours</option>
+              <option value="done">Reçu</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" onclick="addItem('orders')">+ Ajouter</button>
+        </div>
+      </div>
+      <div class="items-list" id="list-orders"><div class="loading">Chargement...</div></div>
     </div>
-    <div class="items-list" id="thought-list"></div>
-  </div>
 
-</main>
-</div>
+    <!-- RENDEZ-VOUS -->
+    <div class="view" id="view-rdv">
+      <div class="view-header">
+        <div class="view-title">Rendez-<span>vous</span></div>
+      </div>
+      <div class="add-form">
+        <div class="add-form-row">
+          <div class="form-group" style="flex:2">
+            <label class="form-label">Objet du RDV</label>
+            <input type="text" id="rdv-title" placeholder="Objet du rendez-vous...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Avec qui</label>
+            <input type="text" id="rdv-person" placeholder="Nom / Société">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Date & Heure</label>
+            <input type="datetime-local" id="rdv-date">
+          </div>
+          <button class="btn btn-primary" onclick="addItem('rdv')">+ Ajouter</button>
+        </div>
+      </div>
+      <div class="items-list" id="list-rdv"><div class="loading">Chargement...</div></div>
+    </div>
 
-<!-- MODAL nouvel événement -->
-<div class="modal-overlay hidden" id="eventModal">
-  <div class="modal">
-    <div class="modal-title">Nouvel <span>événement</span></div>
-    <div class="modal-field"><label>Titre</label><input type="text" id="ev-title" placeholder="Réunion, rappel, tâche..."/></div>
-    <div style="display:flex;gap:10px;">
-      <div class="modal-field" style="flex:1"><label>Heure début</label><input type="time" id="ev-start"/></div>
-      <div class="modal-field" style="flex:1"><label>Heure fin</label><input type="time" id="ev-end"/></div>
+    <!-- SITUATIONS -->
+    <div class="view" id="view-situations">
+      <div class="view-header">
+        <div class="view-title">Situations <span>à régler</span></div>
+      </div>
+      <div class="add-form">
+        <div class="add-form-row">
+          <div class="form-group" style="flex:2">
+            <label class="form-label">Situation</label>
+            <input type="text" id="sit-title" placeholder="Décrivez la situation...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Priorité</label>
+            <select id="sit-priority">
+              <option value="urgent">🔴 Urgent</option>
+              <option value="normal" selected>🔵 Normal</option>
+              <option value="low">🟢 Faible</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:2">
+            <label class="form-label">Notes</label>
+            <input type="text" id="sit-notes" placeholder="Informations complémentaires...">
+          </div>
+          <button class="btn btn-primary" onclick="addItem('situations')">+ Ajouter</button>
+        </div>
+      </div>
+      <div class="items-list" id="list-situations"><div class="loading">Chargement...</div></div>
     </div>
-    <div class="modal-field"><label>Type</label>
-      <select id="ev-type">
-        <option value="ev-event">📌 Événement</option>
-        <option value="ev-rdv">📅 Rendez-vous</option>
-        <option value="ev-task">✓ Tâche</option>
-        <option value="ev-urgent">⚡ Urgent</option>
-      </select>
+
+    <!-- À APPELER -->
+    <div class="view" id="view-calls">
+      <div class="view-header">
+        <div class="view-title">Personnes <span>à appeler</span></div>
+      </div>
+      <div class="add-form">
+        <div class="add-form-row">
+          <div class="form-group">
+            <label class="form-label">Nom</label>
+            <input type="text" id="call-name" placeholder="Nom complet">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Téléphone</label>
+            <input type="text" id="call-phone" placeholder="+225 ...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Société</label>
+            <input type="text" id="call-company" placeholder="Société / Organisation">
+          </div>
+          <div class="form-group" style="flex:2">
+            <label class="form-label">Objet de l'appel</label>
+            <input type="text" id="call-subject" placeholder="Pourquoi appeler ?">
+          </div>
+          <button class="btn btn-primary" onclick="addItem('calls')">+ Ajouter</button>
+        </div>
+      </div>
+      <div class="items-list" id="list-calls"><div class="loading">Chargement...</div></div>
     </div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost" onclick="closeModal()">Annuler</button>
-      <button class="btn btn-primary" onclick="saveEvent()">Enregistrer</button>
+
+    <!-- CONTACTS -->
+    <div class="view" id="view-contacts">
+      <div class="view-header">
+        <div class="view-title">Contacts <span>rapides</span></div>
+      </div>
+      <div class="add-form">
+        <div class="add-form-row">
+          <div class="form-group">
+            <label class="form-label">Nom</label>
+            <input type="text" id="contact-name" placeholder="Nom complet">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Téléphone</label>
+            <input type="text" id="contact-phone" placeholder="+225 ...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" id="contact-email" placeholder="email@...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Société / Rôle</label>
+            <input type="text" id="contact-company" placeholder="Société ou rôle">
+          </div>
+          <button class="btn btn-primary" onclick="addItem('contacts')">+ Ajouter</button>
+        </div>
+      </div>
+      <div class="items-list" id="list-contacts"><div class="loading">Chargement...</div></div>
     </div>
-  </div>
+
+    <!-- PENSÉES -->
+    <div class="view" id="view-thoughts">
+      <div class="view-header">
+        <div class="view-title">Pensées <span>& idées</span></div>
+      </div>
+      <div class="add-form">
+        <div class="add-form-row">
+          <div class="form-group" style="flex:1">
+            <label class="form-label">Pensée / Idée</label>
+            <textarea id="thought-text" placeholder="Notez votre idée, réflexion..."></textarea>
+          </div>
+          <button class="btn btn-primary" style="align-self:flex-end" onclick="addItem('thoughts')">+ Ajouter</button>
+        </div>
+      </div>
+      <div class="items-list" id="list-thoughts"><div class="loading">Chargement...</div></div>
+    </div>
+
+    <!-- EXPRESSION DES BESOINS -->
+    <div class="view" id="view-needs">
+      <div class="view-header">
+        <div class="view-title">Expression des <span>besoins</span></div>
+      </div>
+      <div class="add-form">
+        <div class="add-form-row">
+          <div class="form-group" style="flex:2">
+            <label class="form-label">Besoin</label>
+            <input type="text" id="need-title" placeholder="Décrivez le besoin...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Département / Entité</label>
+            <input type="text" id="need-dept" placeholder="MIEVEL, CISC, OPE...">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Priorité</label>
+            <select id="need-priority">
+              <option value="urgent">🔴 Urgent</option>
+              <option value="normal" selected>🔵 Normal</option>
+              <option value="low">🟢 Faible</option>
+            </select>
+          </div>
+          <div class="form-group" style="flex:2">
+            <label class="form-label">Détails / Justification</label>
+            <input type="text" id="need-notes" placeholder="Pourquoi ce besoin ?">
+          </div>
+          <button class="btn btn-primary" onclick="addItem('needs')">+ Ajouter</button>
+        </div>
+      </div>
+      <div class="items-list" id="list-needs"><div class="loading">Chargement...</div></div>
+    </div>
+
+  </main>
 </div>
 
 <script>
-// ===== STORAGE =====
-const KEYS = { tasks:'bp_tasks', orders:'bp_orders', rdv:'bp_rdv', situations:'bp_situations', calls:'bp_calls', contacts:'bp_contacts', thoughts:'bp_thoughts', events:'bp_events', needs:'bp_needs' };
-let data = {};
-Object.keys(KEYS).forEach(k => { try { data[k] = JSON.parse(localStorage.getItem(KEYS[k])) || []; } catch(e) { data[k] = []; } });
-function save(k) { localStorage.setItem(KEYS[k], JSON.stringify(data[k])); }
+// ---- DATE ----
+const now = new Date();
+const days = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+const months = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+document.getElementById('sDateNum').textContent = now.getDate();
+document.getElementById('sDateInfo').textContent = days[now.getDay()] + ' · ' + months[now.getMonth()];
+document.getElementById('dash-date').textContent = days[now.getDay()] + ' ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
 
-// ===== HELPERS =====
-const DAYS_FR = ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'];
-const DAYS_FULL = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
-const MONTHS_FR = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
-const MONTHS_SHORT = ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
-
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-function toDateStr(d) { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-function todayStr() { return toDateStr(new Date()); }
-function isToday(s) { return s === todayStr(); }
-function isPast(s) { return s && s < todayStr(); }
-function formatDate(s) { if(!s) return ''; const d=new Date(s+'T00:00:00'); const diff=Math.round((d-new Date(todayStr()+'T00:00:00'))/86400000); if(diff===0) return "Aujourd'hui"; if(diff===1) return 'Demain'; if(diff===-1) return 'Hier'; return d.getDate()+' '+MONTHS_SHORT[d.getMonth()]; }
-function nowStr() { const d=new Date(); return d.getDate()+' '+MONTHS_SHORT[d.getMonth()]+' · '+d.getHours()+'h'+String(d.getMinutes()).padStart(2,'0'); }
-function pTag(p) { if(p==='urgent') return '<span class="ic-tag tag-urgent">Urgent</span>'; if(p==='low') return '<span class="ic-tag tag-low">Bas</span>'; return '<span class="ic-tag tag-normal">Normal</span>'; }
-
-// ===== DATE INIT =====
-function initDate() {
-  const d = new Date();
-  document.getElementById('sDateNum').textContent = d.getDate();
-  document.getElementById('sDateInfo').textContent = DAYS_FULL[d.getDay()]+' · '+MONTHS_FR[d.getMonth()];
+// ---- NAVIGATION ----
+function showView(id) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('view-' + id).classList.add('active');
+  const navItems = document.querySelectorAll('.nav-item');
+  navItems.forEach(n => { if (n.getAttribute('onclick').includes(id)) n.classList.add('active'); });
 }
 
-// ===== NAVIGATION =====
-function showView(name) {
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  document.getElementById('view-'+name).classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(btn=>{ if(btn.getAttribute('onclick')==="showView('"+name+"')") btn.classList.add('active'); });
-  renderAll();
+// ---- DATA STORE ----
+const store = { tasks:[], orders:[], rdv:[], situations:[], calls:[], contacts:[], thoughts:[], needs:[] };
+
+// ---- SYNC STATUS ----
+function setSyncStatus(state) {
+  const dot = document.getElementById('sync-dot');
+  const text = document.getElementById('sync-text');
+  dot.className = 'sync-dot' + (state === 'syncing' ? ' syncing' : state === 'error' ? ' error' : '');
+  text.textContent = state === 'ok' ? 'Synchronisé' : state === 'syncing' ? 'Synchronisation...' : 'Erreur de sync';
 }
 
-// ===== FILTERS =====
-let filters = { tasks:'all', orders:'all', situations:'all' };
-function filterItems(s,f,btn) { filters[s]=f; btn.closest('.filter-row').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); renderAll(); }
-
-// ===== CALENDAR STATE =====
-let calView = 'week';
-let calOffset = 0; // weeks or months offset from today
-
-function setCalView(v) {
-  calView = v;
-  document.getElementById('vt-week').classList.toggle('active', v==='week');
-  document.getElementById('vt-month').classList.toggle('active', v==='month');
-  document.getElementById('cal-week-container').style.display = v==='week'?'':'none';
-  document.getElementById('cal-month-container').style.display = v==='month'?'':'none';
-  renderCal();
-}
-
-function navCal(dir) { calOffset += dir; renderCal(); }
-function goToday() { calOffset = 0; renderCal(); }
-
-function getWeekDays(offset) {
-  const today = new Date(); today.setHours(0,0,0,0);
-  const dow = today.getDay(); // 0=Sun
-  const monday = new Date(today); monday.setDate(today.getDate() - ((dow+6)%7) + offset*7);
-  const days = [];
-  for(let i=0;i<7;i++) { const d=new Date(monday); d.setDate(monday.getDate()+i); days.push(d); }
-  return days;
-}
-
-function renderCal() {
-  if(calView==='week') renderWeek();
-  else renderMonth();
-  updateBadges();
-}
-
-// ===== WEEK RENDER =====
-let dragItem = null;
-
-function renderWeek() {
-  const days = getWeekDays(calOffset);
-  const first = days[0], last = days[6];
-  const sameMonth = first.getMonth()===last.getMonth();
-  document.getElementById('calPeriod').textContent = sameMonth
-    ? first.getDate()+' – '+last.getDate()+' '+MONTHS_FR[last.getMonth()]+' '+last.getFullYear()
-    : first.getDate()+' '+MONTHS_SHORT[first.getMonth()]+' – '+last.getDate()+' '+MONTHS_SHORT[last.getMonth()]+' '+last.getFullYear();
-
-  const html = `<div class="week-grid">${days.map(d=>{
-    const ds = toDateStr(d);
-    const isTod = isToday(ds);
-    const eventsForDay = getEventsForDay(ds);
-    return `<div class="day-col${isTod?' today-col':''}" id="dc-${ds}" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="dropOnDay(event,'${ds}')">
-      <div class="day-head">
-        <div class="day-name">${DAYS_FR[d.getDay()]}</div>
-        <div class="day-num">${d.getDate()}</div>
-        ${d.getDate()===1?`<div class="day-month">${MONTHS_SHORT[d.getMonth()]}</div>`:''}
-      </div>
-      <div class="day-body" id="db-${ds}">
-        ${eventsForDay.map(ev=>pillHtml(ev)).join('')}
-        <button class="day-add-btn" onclick="openModal('${ds}')">+ Ajouter</button>
-      </div>
-    </div>`;
-  }).join('')}</div>`;
-  document.getElementById('cal-week-container').innerHTML = html;
-  attachDragListeners();
-}
-
-function pillHtml(ev) {
-  const done = ev.done ? ' done-pill' : '';
-  const time = ev.startTime ? `<div class="pill-time">${ev.startTime}${ev.endTime?' – '+ev.endTime:''}</div>` : '';
-  return `<div class="event-pill ${ev.type||'ev-event'}${done}" draggable="true" id="evpill-${ev.id}" data-id="${ev.id}" onclick="toggleEvDone('${ev.id}')">
-    <div class="pill-top">
-      <span class="pill-text">${esc(ev.title)}</span>
-      <span class="pill-del" onclick="event.stopPropagation();deleteEvent('${ev.id}')">×</span>
-    </div>
-    ${time}
-  </div>`;
-}
-
-function attachDragListeners() {
-  document.querySelectorAll('.event-pill[draggable]').forEach(pill => {
-    pill.addEventListener('dragstart', e => {
-      dragItem = pill.dataset.id;
-      e.dataTransfer.effectAllowed = 'move';
-      setTimeout(()=>pill.style.opacity='0.4', 0);
-    });
-    pill.addEventListener('dragend', e => {
-      pill.style.opacity = '';
-      document.querySelectorAll('.day-col').forEach(c=>c.classList.remove('drag-over'));
+// ---- FIREBASE INTEGRATION ----
+window.addEventListener('firebase-ready', () => {
+  setSyncStatus('ok');
+  const db = window.db;
+  const collections = ['tasks','orders','rdv','situations','calls','contacts','thoughts','needs'];
+  
+  collections.forEach(colName => {
+    const colRef = window.fbCollection(db, colName);
+    window.fbOnSnapshot(colRef, (snapshot) => {
+      store[colName] = [];
+      snapshot.forEach(doc => {
+        store[colName].push({ id: doc.id, ...doc.data() });
+      });
+      store[colName].sort((a,b) => (b.createdAt||0) - (a.createdAt||0));
+      renderList(colName);
+      updateBadges();
+      renderDashboard();
     });
   });
-}
-
-function dropOnDay(e, dateStr) {
-  e.preventDefault();
-  document.querySelectorAll('.day-col').forEach(c=>c.classList.remove('drag-over'));
-  if (!dragItem) return;
-  const ev = data.events.find(x=>x.id==dragItem);
-  if (ev) { ev.date = dateStr; save('events'); renderCal(); }
-  dragItem = null;
-}
-
-// ===== MONTH RENDER =====
-function renderMonth() {
-  const today = new Date(); today.setHours(0,0,0,0);
-  const ref = new Date(today.getFullYear(), today.getMonth() + calOffset, 1);
-  document.getElementById('calPeriod').textContent = MONTHS_FR[ref.getMonth()].charAt(0).toUpperCase()+MONTHS_FR[ref.getMonth()].slice(1)+' '+ref.getFullYear();
-
-  const firstDay = new Date(ref.getFullYear(), ref.getMonth(), 1);
-  const lastDay = new Date(ref.getFullYear(), ref.getMonth()+1, 0);
-  const startDow = (firstDay.getDay()+6)%7; // Mon=0
-
-  let html = '<div class="month-grid">';
-  ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'].forEach(d=>{html+=`<div class="month-day-head">${d}</div>`;});
-
-  let cells = [];
-  for(let i=0;i<startDow;i++) { const d=new Date(firstDay); d.setDate(d.getDate()-(startDow-i)); cells.push({d,other:true}); }
-  for(let i=1;i<=lastDay.getDate();i++) cells.push({d:new Date(ref.getFullYear(),ref.getMonth(),i),other:false});
-  while(cells.length%7!==0) { const last=cells[cells.length-1].d; const d=new Date(last); d.setDate(last.getDate()+1); cells.push({d,other:true}); }
-
-  cells.forEach(({d,other})=>{
-    const ds = toDateStr(d);
-    const isTod = isToday(ds);
-    const evs = getEventsForDay(ds);
-    const shown = evs.slice(0,3);
-    html+=`<div class="month-cell${isTod?' today-cell':''}${other?' other-month':''}" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="dropOnDay(event,'${ds}')" onclick="openModal('${ds}')">
-      <div class="mc-num">${d.getDate()}</div>
-      <div class="mc-events">${shown.map(ev=>`<div class="mc-pill ${ev.type||'ev-event'}">${esc(ev.title)}</div>`).join('')}
-      ${evs.length>3?`<div class="mc-more">+${evs.length-3} autres</div>`:''}</div>
-    </div>`;
-  });
-  html += '</div>';
-  document.getElementById('cal-month-container').innerHTML = html;
-}
-
-// ===== EVENTS HELPERS =====
-function getEventsForDay(ds) {
-  const evs = data.events.filter(e=>e.date===ds);
-  const tasks = data.tasks.filter(t=>t.date===ds && !t.done).map(t=>({id:'t'+t.id,title:t.text,type:t.priority==='urgent'?'ev-urgent':'ev-task',date:ds,fromTask:true,done:t.done}));
-  const rdvs = data.rdv.filter(r=>r.date===ds && !r.done).map(r=>({id:'r'+r.id,title:r.text+(r.time?' ('+r.time+')':''),type:'ev-rdv',date:ds,fromRdv:true,done:r.done}));
-  return [...evs, ...rdvs, ...tasks].sort((a,b)=>(a.startTime||'99').localeCompare(b.startTime||'99'));
-}
-
-// ===== MODAL =====
-let modalDate = null;
-function openModal(ds) { modalDate=ds; document.getElementById('eventModal').classList.remove('hidden'); document.getElementById('ev-title').focus(); }
-function closeModal() { document.getElementById('eventModal').classList.add('hidden'); document.getElementById('ev-title').value=''; document.getElementById('ev-start').value=''; document.getElementById('ev-end').value=''; }
-function saveEvent() {
-  const title = document.getElementById('ev-title').value.trim();
-  if(!title) return;
-  data.events.push({ id: Date.now(), title, date: modalDate, startTime: document.getElementById('ev-start').value, endTime: document.getElementById('ev-end').value, type: document.getElementById('ev-type').value, done: false });
-  save('events'); closeModal(); renderCal();
-}
-
-function toggleEvDone(id) {
-  const ev = data.events.find(e=>e.id==id);
-  if(ev) { ev.done=!ev.done; save('events'); renderCal(); }
-}
-function deleteEvent(id) {
-  data.events = data.events.filter(e=>e.id!=id);
-  save('events'); renderCal();
-}
-
-// ===== BADGES =====
-function updateBadges() {
-  const pending = arr => arr.filter(x=>!x.done && x.status!=='resolved' && x.status!=='done' && x.status!=='cancelled').length;
-  document.getElementById('nb-tasks').textContent = pending(data.tasks);
-  document.getElementById('nb-orders').textContent = data.orders.filter(x=>x.status==='pending').length;
-  document.getElementById('nb-rdv').textContent = data.rdv.filter(x=>!x.done).length;
-  document.getElementById('nb-sit').textContent = data.situations.filter(x=>x.status==='open').length;
-  document.getElementById('nb-calls').textContent = data.calls.filter(x=>!x.done).length;
-  document.getElementById('nb-needs').textContent = data.needs.filter(x=>x.status!=='done').length;
-  document.getElementById('nb-contacts').textContent = data.contacts.length;
-  document.getElementById('nb-thoughts').textContent = data.thoughts.length;
-  const weekDays = getWeekDays(0).map(d=>toDateStr(d));
-  document.getElementById('nb-planning').textContent = data.events.filter(e=>weekDays.includes(e.date)).length;
-  document.getElementById('ds-tasks').textContent = data.tasks.length;
-  document.getElementById('ds-orders').textContent = data.orders.length;
-  document.getElementById('ds-rdv').textContent = data.rdv.length;
-  document.getElementById('ds-sit').textContent = data.situations.filter(x=>x.status==='open').length;
-  document.getElementById('ds-calls').textContent = data.calls.filter(x=>!x.done).length;
-  document.getElementById('ds-events').textContent = data.events.length;
-}
-
-// ===== DASHBOARD =====
-function renderDashboard() {
-  // Semaine
-  const weekDays = getWeekDays(0);
-  const weekEvs = weekDays.flatMap(d=>getEventsForDay(toDateStr(d))).slice(0,6);
-  document.getElementById('dash-week').innerHTML = weekEvs.length ? weekEvs.map(e=>`<div class="mini-item"><span class="mi-dot" style="background:var(--violet)"></span><span class="mi-text">${esc(e.title)}</span><span class="mi-date">${formatDate(e.date)}</span></div>`).join('') : '<div class="empty-mini">Aucun événement cette semaine</div>';
-
-  const urgTasks = data.tasks.filter(t=>!t.done&&t.priority==='urgent').slice(0,5);
-  document.getElementById('dash-tasks').innerHTML = urgTasks.length ? urgTasks.map(t=>`<div class="mini-item"><span class="mi-dot" style="background:var(--teal)"></span><span class="mi-text">${esc(t.text)}</span>${t.date?`<span class="mi-date">${formatDate(t.date)}</span>`:''}</div>`).join('') : '<div class="empty-mini">Aucune tâche urgente</div>';
-
-  const openSit = data.situations.filter(s=>s.status==='open').slice(0,5);
-  document.getElementById('dash-sit').innerHTML = openSit.length ? openSit.map(s=>`<div class="mini-item"><span class="mi-dot" style="background:var(--rose)"></span><span class="mi-text">${esc(s.text)}</span></div>`).join('') : '<div class="empty-mini">Aucune situation ouverte</div>';
-
-  const pOrders = data.orders.filter(o=>o.status==='pending').slice(0,5);
-  document.getElementById('dash-orders').innerHTML = pOrders.length ? pOrders.map(o=>`<div class="mini-item"><span class="mi-dot" style="background:var(--gold)"></span><span class="mi-text">${esc(o.text)}</span>${o.amount?`<span class="mi-date">${Number(o.amount).toLocaleString()} F</span>`:''}</div>`).join('') : '<div class="empty-mini">Aucun bon en attente</div>';
-
-  const pendCalls = data.calls.filter(c=>!c.done).slice(0,5);
-  document.getElementById('dash-calls').innerHTML = pendCalls.length ? pendCalls.map(c=>`<div class="mini-item"><span class="mi-dot" style="background:var(--amber)"></span><span class="mi-text">${esc(c.name)}</span><span class="mi-date">${esc(c.phone||'')}</span></div>`).join('') : '<div class="empty-mini">Personne à appeler</div>';
-
-  const urgNeeds = data.needs.filter(n=>n.status!=='done'&&n.priority==='urgent').slice(0,5);
-  document.getElementById('dash-needs').innerHTML = urgNeeds.length ? urgNeeds.map(n=>`<div class="mini-item"><span class="mi-dot" style="background:var(--green)"></span><span class="mi-text">${esc(n.text)}</span><span class="mi-date" style="color:var(--gold)">${esc(n.dept||'')}</span></div>`).join('') : '<div class="empty-mini">Aucun besoin urgent</div>';
-
-  const lastTh = [...data.thoughts].reverse().slice(0,4);
-  document.getElementById('dash-thoughts').innerHTML = lastTh.length ? lastTh.map(t=>`<div class="mini-item"><span class="mi-dot" style="background:var(--violet)"></span><span class="mi-text">${esc(t.text)}</span><span class="mi-date">${t.date}</span></div>`).join('') : '<div class="empty-mini">Aucune pensée</div>';
-}
-
-// ===== TÂCHES =====
-function addTask() {
-  const text = document.getElementById('t-text').value.trim(); if(!text) return;
-  data.tasks.push({id:Date.now(),text,priority:document.getElementById('t-prio').value,date:document.getElementById('t-date').value,done:false});
-  document.getElementById('t-text').value=''; save('tasks'); renderAll();
-}
-function renderTasks() {
-  const f=filters.tasks; let items=[...data.tasks];
-  if(f==='pending') items=items.filter(x=>!x.done);
-  if(f==='done') items=items.filter(x=>x.done);
-  if(f==='urgent') items=items.filter(x=>x.priority==='urgent'&&!x.done);
-  items.sort((a,b)=>{if(a.done!==b.done)return a.done?1:-1;const o={urgent:0,normal:1,low:2};return o[a.priority]-o[b.priority];});
-  const el=document.getElementById('task-list');
-  if(!items.length){el.innerHTML='<div class="empty-view">Aucune tâche</div>';return;}
-  el.innerHTML=items.map(t=>{
-    const idx=data.tasks.findIndex(x=>x.id===t.id);
-    const overdue=t.date&&isPast(t.date)&&!t.done;
-    return `<div class="item-card${t.done?' done-card':''}">
-      <div class="ic-check${t.done?' checked':''}" onclick="toggleDone('tasks',${idx})">${t.done?'✓':''}</div>
-      <div class="ic-body"><div class="ic-title">${esc(t.text)}</div>
-      <div class="ic-meta">${pTag(t.priority)}${t.date?`<span class="ic-tag ${overdue?'tag-urgent':isToday(t.date)?'tag-today':'tag-normal'}">${formatDate(t.date)}</span>`:''}</div></div>
-      <div class="ic-actions"><button class="btn btn-danger" onclick="deleteItem('tasks',${idx})">Supprimer</button></div>
-    </div>`;
-  }).join('');
-}
-
-// ===== COMMANDES =====
-function addOrder() {
-  const text=document.getElementById('o-text').value.trim(); if(!text) return;
-  data.orders.push({id:Date.now(),text,supplier:document.getElementById('o-supplier').value.trim(),amount:document.getElementById('o-amount').value.trim(),status:document.getElementById('o-status').value});
-  ['o-text','o-supplier','o-amount'].forEach(id=>document.getElementById(id).value='');
-  save('orders'); renderAll();
-}
-function renderOrders() {
-  const f=filters.orders; let items=[...data.orders];
-  if(f==='pending') items=items.filter(x=>x.status==='pending');
-  if(f==='done') items=items.filter(x=>x.status==='done');
-  const el=document.getElementById('order-list');
-  if(!items.length){el.innerHTML='<div class="empty-view">Aucun bon de commande</div>';return;}
-  el.innerHTML=items.map(o=>{
-    const realIdx=data.orders.findIndex(x=>x.id===o.id);
-    const stTag=o.status==='done'?'tag-done':o.status==='cancelled'?'tag-cancelled':'tag-pending';
-    const stLbl=o.status==='done'?'Validé':o.status==='cancelled'?'Annulé':'En attente';
-    return `<div class="item-card">
-      <div class="ic-body"><div class="ic-title">${esc(o.text)}</div>
-      <div class="ic-meta"><span class="ic-tag ${stTag}">${stLbl}</span>
-      ${o.supplier?`<span style="font-size:12px;color:var(--text2)">📦 ${esc(o.supplier)}</span>`:''}
-      ${o.amount?`<span style="font-size:12px;color:var(--gold);font-weight:500">${Number(o.amount).toLocaleString()} FCFA</span>`:''}</div></div>
-      <div class="ic-actions">
-        <select style="font-size:12px;padding:5px 8px;min-width:120px" onchange="changeOrderStatus(${realIdx},this.value)">
-          <option value="pending" ${o.status==='pending'?'selected':''}>En attente</option>
-          <option value="done" ${o.status==='done'?'selected':''}>Validé</option>
-          <option value="cancelled" ${o.status==='cancelled'?'selected':''}>Annulé</option>
-        </select>
-        <button class="btn btn-danger" onclick="deleteItem('orders',${realIdx})">Supprimer</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-function changeOrderStatus(idx,val){data.orders[idx].status=val;save('orders');renderAll();}
-
-// ===== RDV =====
-function addRdv() {
-  const text=document.getElementById('r-text').value.trim(); if(!text) return;
-  data.rdv.push({id:Date.now(),text,place:document.getElementById('r-place').value.trim(),date:document.getElementById('r-date').value,time:document.getElementById('r-time').value,done:false});
-  document.getElementById('r-text').value=''; document.getElementById('r-place').value='';
-  save('rdv'); renderAll();
-}
-function renderRdv() {
-  const sorted=[...data.rdv].sort((a,b)=>{if(a.done!==b.done)return a.done?1:-1;return(a.date||'').localeCompare(b.date||'');});
-  const el=document.getElementById('rdv-list');
-  if(!sorted.length){el.innerHTML='<div class="empty-view">Aucun rendez-vous</div>';return;}
-  el.innerHTML=sorted.map(r=>{
-    const idx=data.rdv.findIndex(x=>x.id===r.id);
-    return `<div class="item-card${r.done?' done-card':''}">
-      <div class="ic-check${r.done?' checked':''}" onclick="toggleDone('rdv',${idx})">${r.done?'✓':''}</div>
-      <div class="ic-body"><div class="ic-title">${esc(r.text)}</div>
-      <div class="ic-meta">
-        ${r.date?`<span class="ic-tag ${isToday(r.date)?'tag-today':'tag-normal'}">📅 ${formatDate(r.date)}${r.time?' à '+r.time:''}</span>`:''}
-        ${r.place?`<span style="font-size:12px;color:var(--text2)">📍 ${esc(r.place)}</span>`:''}
-      </div></div>
-      <div class="ic-actions"><button class="btn btn-danger" onclick="deleteItem('rdv',${idx})">Supprimer</button></div>
-    </div>`;
-  }).join('');
-}
-
-// ===== SITUATIONS =====
-function addSituation() {
-  const text=document.getElementById('s-text').value.trim(); if(!text) return;
-  data.situations.push({id:Date.now(),text,who:document.getElementById('s-who').value.trim(),priority:document.getElementById('s-prio').value,status:document.getElementById('s-status').value});
-  document.getElementById('s-text').value=''; document.getElementById('s-who').value='';
-  save('situations'); renderAll();
-}
-function renderSituations() {
-  const f=filters.situations; let items=[...data.situations];
-  if(f==='open') items=items.filter(x=>x.status==='open');
-  if(f==='resolved') items=items.filter(x=>x.status==='resolved');
-  const el=document.getElementById('sit-list');
-  if(!items.length){el.innerHTML='<div class="empty-view">Aucune situation</div>';return;}
-  el.innerHTML=items.map(s=>{
-    const idx=data.situations.findIndex(x=>x.id===s.id);
-    return `<div class="item-card">
-      <div class="ic-body"><div class="ic-title">${esc(s.text)}</div>
-      <div class="ic-meta">${pTag(s.priority)}<span class="ic-tag ${s.status==='open'?'tag-open':'tag-resolved'}">${s.status==='open'?'Ouvert':'Résolu'}</span>
-      ${s.who?`<span style="font-size:12px;color:var(--text2)">👤 ${esc(s.who)}</span>`:''}</div></div>
-      <div class="ic-actions">
-        <button class="btn btn-ghost" style="font-size:12px;padding:5px 12px" onclick="toggleSitStatus(${idx})">${s.status==='open'?'✓ Résoudre':'↺ Rouvrir'}</button>
-        <button class="btn btn-danger" onclick="deleteItem('situations',${idx})">Supprimer</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-function toggleSitStatus(idx){data.situations[idx].status=data.situations[idx].status==='open'?'resolved':'open';save('situations');renderAll();}
-
-// ===== CALLS =====
-function addCall() {
-  const name=document.getElementById('ca-name').value.trim(); if(!name) return;
-  data.calls.push({id:Date.now(),name,phone:document.getElementById('ca-phone').value.trim(),reason:document.getElementById('ca-reason').value.trim(),priority:document.getElementById('ca-prio').value,done:false});
-  ['ca-name','ca-phone','ca-reason'].forEach(id=>document.getElementById(id).value='');
-  save('calls'); renderAll();
-}
-function renderCalls() {
-  const sorted=[...data.calls].sort((a,b)=>{if(a.done!==b.done)return a.done?1:-1;return a.priority==='urgent'?-1:1;});
-  const el=document.getElementById('call-list');
-  if(!sorted.length){el.innerHTML='<div class="empty-view">Personne à appeler</div>';return;}
-  el.innerHTML=sorted.map(c=>{
-    const idx=data.calls.findIndex(x=>x.id===c.id);
-    return `<div class="item-card${c.done?' done-card':''}">
-      <div class="ic-check${c.done?' checked':''}" onclick="toggleDone('calls',${idx})">${c.done?'✓':''}</div>
-      <div class="ic-body"><div class="ic-title">${esc(c.name)}${c.phone?` <span style="color:var(--teal);font-size:13px;font-weight:400">— ${esc(c.phone)}</span>`:''}</div>
-      <div class="ic-meta">${pTag(c.priority)}${c.reason?`<span style="font-size:12px;color:var(--text2)">${esc(c.reason)}</span>`:''}</div></div>
-      <div class="ic-actions">
-        ${c.phone?`<a href="tel:${esc(c.phone)}" style="text-decoration:none"><button class="btn btn-ghost" style="font-size:12px;padding:5px 12px;color:var(--teal);border-color:rgba(45,212,191,0.3)">📞 Appeler</button></a>`:''}
-        <button class="btn btn-danger" onclick="deleteItem('calls',${idx})">Supprimer</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// ===== CONTACTS =====
-function addContact() {
-  const name=document.getElementById('ct-name').value.trim(); if(!name) return;
-  data.contacts.push({id:Date.now(),name,role:document.getElementById('ct-role').value.trim(),phone:document.getElementById('ct-phone').value.trim(),email:document.getElementById('ct-email').value.trim()});
-  ['ct-name','ct-role','ct-phone','ct-email'].forEach(id=>document.getElementById(id).value='');
-  save('contacts'); renderAll();
-}
-function renderContacts() {
-  const el=document.getElementById('contact-list');
-  if(!data.contacts.length){el.innerHTML='<div class="empty-view">Aucun contact</div>';return;}
-  el.innerHTML=data.contacts.map((c,idx)=>{
-    const initials=c.name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-    return `<div class="contact-card">
-      <div class="contact-avatar">${initials}</div>
-      <div class="contact-info"><div class="contact-name">${esc(c.name)}</div>
-      ${c.role?`<div class="contact-role">${esc(c.role)}</div>`:''}
-      ${c.phone?`<div class="contact-phone">${esc(c.phone)}</div>`:''}</div>
-      <div class="contact-actions">
-        ${c.phone?`<a href="tel:${esc(c.phone)}" style="text-decoration:none"><button class="icon-btn call">📞</button></a>`:''}
-        <button class="icon-btn del" onclick="deleteItem('contacts',${idx})">×</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// ===== THOUGHTS =====
-function addThought() {
-  const text=document.getElementById('th-text').value.trim(); if(!text) return;
-  data.thoughts.push({id:Date.now(),text,date:nowStr()});
-  document.getElementById('th-text').value=''; save('thoughts'); renderAll();
-}
-function renderThoughts() {
-  const el=document.getElementById('thought-list');
-  if(!data.thoughts.length){el.innerHTML='<div class="empty-view">Aucune pensée</div>';return;}
-  el.innerHTML=[...data.thoughts].reverse().map(t=>{
-    const idx=data.thoughts.findIndex(x=>x.id===t.id);
-    return `<div class="item-card">
-      <div class="ic-body"><div class="ic-title" style="font-style:italic">${esc(t.text)}</div>
-      <div class="ic-meta"><span style="font-size:11px;color:var(--text3)">${t.date}</span></div></div>
-      <div class="ic-actions"><button class="btn btn-danger" onclick="deleteItem('thoughts',${idx})">Supprimer</button></div>
-    </div>`;
-  }).join('');
-}
-
-// ===== HELPERS =====
-function toggleDone(key,idx){data[key][idx].done=!data[key][idx].done;save(key);renderAll();}
-function deleteItem(key,idx){data[key].splice(idx,1);save(key);renderAll();}
-
-// ===== BESOINS =====
-let needFilter = 'all';
-let needDeptFilter = '';
-
-function filterNeeds(f, btn) {
-  needFilter = f;
-  if(btn) { btn.closest('.filter-row').querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
-  renderNeeds();
-}
-
-function filterNeedsByDept(dept) {
-  needDeptFilter = needDeptFilter === dept ? '' : dept;
-  renderNeeds();
-}
-
-function addNeed() {
-  const text = document.getElementById('nd-text').value.trim();
-  if(!text) return;
-  data.needs.push({
-    id: Date.now(),
-    dept: document.getElementById('nd-dept').value.trim(),
-    text,
-    priority: document.getElementById('nd-prio').value,
-    status: document.getElementById('nd-status').value,
-    date: document.getElementById('nd-date').value
-  });
-  document.getElementById('nd-text').value='';
-  document.getElementById('nd-dept').value='';
-  document.getElementById('nd-date').value='';
-  save('needs'); renderAll();
-}
-
-function changeNeedStatus(idx, val) { data.needs[idx].status=val; save('needs'); renderAll(); }
-
-function renderNeeds() {
-  // Dept tabs
-  const depts = [...new Set(data.needs.map(n=>n.dept).filter(Boolean))].sort();
-  const tabsEl = document.getElementById('needs-dept-tabs');
-  if(depts.length) {
-    tabsEl.innerHTML = depts.map(d=>`<button class="filter-btn${needDeptFilter===d?' active':''}" onclick="filterNeedsByDept('${esc(d)}')" style="border-color:rgba(201,168,76,0.3);${needDeptFilter===d?'background:var(--gold-dim);color:var(--gold)':''}">🏢 ${esc(d)}</button>`).join('');
-  } else { tabsEl.innerHTML=''; }
-
-  let items = [...data.needs];
-  if(needDeptFilter) items = items.filter(x=>(x.dept||'')=== needDeptFilter);
-  if(needFilter==='open') items=items.filter(x=>x.status==='open');
-  else if(needFilter==='inprogress') items=items.filter(x=>x.status==='inprogress');
-  else if(needFilter==='done') items=items.filter(x=>x.status==='done');
-  else if(needFilter==='urgent') items=items.filter(x=>x.priority==='urgent'&&x.status!=='done');
-
-  items.sort((a,b)=>{
-    const so={open:0,inprogress:1,done:2};const po={urgent:0,normal:1,low:2};
-    if(so[a.status]!==so[b.status]) return so[a.status]-so[b.status];
-    return po[a.priority]-po[b.priority];
-  });
-
-  const el=document.getElementById('need-list');
-  if(!items.length){el.innerHTML='<div class="empty-view">Aucun besoin enregistré</div>';return;}
-
-  el.innerHTML=items.map(n=>{
-    const idx=data.needs.findIndex(x=>x.id===n.id);
-    const stTag=n.status==='done'?'tag-done':n.status==='inprogress'?'tag-normal':'tag-open';
-    const stLbl=n.status==='done'?'Traité':n.status==='inprogress'?'En cours':'En attente';
-    const overdue=n.date&&isPast(n.date)&&n.status!=='done';
-    return `<div class="item-card${n.status==='done'?' done-card':''}">
-      <div class="ic-body">
-        <div class="ic-title">${esc(n.text)}</div>
-        <div class="ic-meta">
-          ${n.dept?`<span style="font-size:11px;font-weight:500;padding:2px 8px;border-radius:20px;background:var(--gold-dim);color:var(--gold);border:1px solid rgba(201,168,76,0.2)">🏢 ${esc(n.dept)}</span>`:''}
-          ${pTag(n.priority)}
-          <span class="ic-tag ${stTag}">${stLbl}</span>
-          ${n.date?`<span class="ic-tag ${overdue?'tag-urgent':isToday(n.date)?'tag-today':'tag-normal'}">${formatDate(n.date)}</span>`:''}
-        </div>
-      </div>
-      <div class="ic-actions">
-        <select style="font-size:12px;padding:5px 8px;min-width:120px" onchange="changeNeedStatus(${idx},this.value)">
-          <option value="open" ${n.status==='open'?'selected':''}>En attente</option>
-          <option value="inprogress" ${n.status==='inprogress'?'selected':''}>En cours</option>
-          <option value="done" ${n.status==='done'?'selected':''}>Traité</option>
-        </select>
-        <button class="btn btn-danger" onclick="deleteItem('needs',${idx})">Supprimer</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-// ===== RENDER ALL (override) =====
-function renderAll(){
-  renderTasks();renderOrders();renderRdv();renderSituations();
-  renderCalls();renderContacts();renderThoughts();renderNeeds();renderDashboard();
-  renderCal();updateBadges();
-  document.getElementById('ds-needs').textContent = data.needs.filter(x=>x.status!=='done').length;
-}
-
-// Keyboard
-document.addEventListener('keydown',e=>{
-  if(e.key==='Escape') closeModal();
-  if(e.key==='Enter'&&!document.getElementById('eventModal').classList.contains('hidden')) { saveEvent(); return; }
-  if(e.key==='Enter') {
-    const v=document.querySelector('.view.active').id;
-    if(v==='view-tasks') addTask();
-    else if(v==='view-orders') addOrder();
-    else if(v==='view-rdv') addRdv();
-    else if(v==='view-situations') addSituation();
-    else if(v==='view-calls') addCall();
-    else if(v==='view-contacts') addContact();
-    else if(v==='view-needs') addNeed();
-    else if(v==='view-thoughts') addThought();
-  }
 });
 
-// Init
-initDate();
-renderAll();
+// ---- ADD ITEM ----
+async function addItem(type) {
+  setSyncStatus('syncing');
+  const db = window.db;
+  let data = { createdAt: Date.now() };
+
+  if (type === 'tasks') {
+    const title = document.getElementById('task-title').value.trim();
+    if (!title) return;
+    data = { ...data, title, priority: document.getElementById('task-priority').value, date: document.getElementById('task-date').value, done: false };
+    document.getElementById('task-title').value = '';
+    document.getElementById('task-date').value = '';
+  } else if (type === 'orders') {
+    const title = document.getElementById('order-title').value.trim();
+    if (!title) return;
+    data = { ...data, title, supplier: document.getElementById('order-supplier').value, status: document.getElementById('order-status').value };
+    document.getElementById('order-title').value = '';
+    document.getElementById('order-supplier').value = '';
+  } else if (type === 'rdv') {
+    const title = document.getElementById('rdv-title').value.trim();
+    if (!title) return;
+    data = { ...data, title, person: document.getElementById('rdv-person').value, date: document.getElementById('rdv-date').value };
+    document.getElementById('rdv-title').value = '';
+    document.getElementById('rdv-person').value = '';
+    document.getElementById('rdv-date').value = '';
+  } else if (type === 'situations') {
+    const title = document.getElementById('sit-title').value.trim();
+    if (!title) return;
+    data = { ...data, title, priority: document.getElementById('sit-priority').value, notes: document.getElementById('sit-notes').value, status: 'open' };
+    document.getElementById('sit-title').value = '';
+    document.getElementById('sit-notes').value = '';
+  } else if (type === 'calls') {
+    const name = document.getElementById('call-name').value.trim();
+    if (!name) return;
+    data = { ...data, title: name, phone: document.getElementById('call-phone').value, company: document.getElementById('call-company').value, subject: document.getElementById('call-subject').value, done: false };
+    document.getElementById('call-name').value = '';
+    document.getElementById('call-phone').value = '';
+    document.getElementById('call-company').value = '';
+    document.getElementById('call-subject').value = '';
+  } else if (type === 'contacts') {
+    const name = document.getElementById('contact-name').value.trim();
+    if (!name) return;
+    data = { ...data, title: name, phone: document.getElementById('contact-phone').value, email: document.getElementById('contact-email').value, company: document.getElementById('contact-company').value };
+    document.getElementById('contact-name').value = '';
+    document.getElementById('contact-phone').value = '';
+    document.getElementById('contact-email').value = '';
+    document.getElementById('contact-company').value = '';
+  } else if (type === 'needs') {
+    const title = document.getElementById('need-title').value.trim();
+    if (!title) return;
+    data = { ...data, title, dept: document.getElementById('need-dept').value, priority: document.getElementById('need-priority').value, notes: document.getElementById('need-notes').value, status: 'open' };
+    document.getElementById('need-title').value = '';
+    document.getElementById('need-dept').value = '';
+    document.getElementById('need-notes').value = '';
+  }
+    const text = document.getElementById('thought-text').value.trim();
+    if (!text) return;
+    data = { ...data, title: text };
+    document.getElementById('thought-text').value = '';
+  }
+
+  try {
+    await window.fbAddDoc(window.fbCollection(db, type), data);
+    setSyncStatus('ok');
+  } catch(e) { setSyncStatus('error'); console.error(e); }
+}
+
+// ---- DELETE ----
+async function deleteItem(type, id) {
+  setSyncStatus('syncing');
+  try {
+    await window.fbDeleteDoc(window.fbDoc(window.db, type, id));
+    setSyncStatus('ok');
+  } catch(e) { setSyncStatus('error'); }
+}
+
+// ---- TOGGLE DONE ----
+async function toggleDone(type, id, current) {
+  setSyncStatus('syncing');
+  try {
+    await window.fbUpdateDoc(window.fbDoc(window.db, type, id), { done: !current });
+    setSyncStatus('ok');
+  } catch(e) { setSyncStatus('error'); }
+}
+
+// ---- RENDER LIST ----
+function renderList(type) {
+  const container = document.getElementById('list-' + type);
+  const items = store[type];
+  if (!items.length) {
+    container.innerHTML = '<div class="empty-state"><div class="empty-icon">✦</div><div class="empty-text">Aucun élément</div></div>';
+    return;
+  }
+
+  container.innerHTML = items.map(item => {
+    let meta = '';
+    let extra = '';
+
+    if (type === 'tasks') {
+      if (item.priority) meta += `<span class="item-tag ${item.priority}">${item.priority === 'urgent' ? '🔴 Urgent' : item.priority === 'normal' ? '🔵 Normal' : '🟢 Faible'}</span>`;
+      if (item.date) meta += `<span class="item-tag date">📅 ${item.date}</span>`;
+      return `<div class="item-card">
+        <div class="item-check ${item.done ? 'done' : ''}" onclick="toggleDone('tasks','${item.id}',${item.done})"></div>
+        <div class="item-body"><div class="item-title ${item.done ? 'done' : ''}">${item.title}</div><div class="item-meta">${meta}</div></div>
+        <div class="item-actions"><button class="icon-btn del" onclick="deleteItem('tasks','${item.id}')">🗑</button></div>
+      </div>`;
+    }
+
+    if (type === 'orders') {
+      const statusLabel = item.status === 'pending' ? 'En attente' : item.status === 'progress' ? 'En cours' : 'Reçu';
+      const statusClass = item.status === 'pending' ? 'status-open' : item.status === 'progress' ? 'status-progress' : 'status-done';
+      meta = `<span class="item-tag ${statusClass}">${statusLabel}</span>`;
+      if (item.supplier) meta += `<span class="item-tag">${item.supplier}</span>`;
+      return `<div class="item-card">
+        <div class="item-body"><div class="item-title">${item.title}</div><div class="item-meta">${meta}</div></div>
+        <div class="item-actions"><button class="icon-btn del" onclick="deleteItem('orders','${item.id}')">🗑</button></div>
+      </div>`;
+    }
+
+    if (type === 'rdv') {
+      if (item.person) meta += `<span class="item-tag">👤 ${item.person}</span>`;
+      if (item.date) meta += `<span class="item-tag date">📅 ${item.date.replace('T',' ')}</span>`;
+      return `<div class="item-card">
+        <div class="item-body"><div class="item-title">${item.title}</div><div class="item-meta">${meta}</div></div>
+        <div class="item-actions"><button class="icon-btn del" onclick="deleteItem('rdv','${item.id}')">🗑</button></div>
+      </div>`;
+    }
+
+    if (type === 'situations') {
+      if (item.priority) meta += `<span class="item-tag ${item.priority}">${item.priority === 'urgent' ? '🔴 Urgent' : item.priority === 'normal' ? '🔵 Normal' : '🟢 Faible'}</span>`;
+      if (item.status) meta += `<span class="item-tag status-open">Ouvert</span>`;
+      return `<div class="item-card">
+        <div class="item-body"><div class="item-title">${item.title}</div><div class="item-meta">${meta}</div>${item.notes ? `<div class="item-notes">${item.notes}</div>` : ''}</div>
+        <div class="item-actions"><button class="icon-btn del" onclick="deleteItem('situations','${item.id}')">🗑</button></div>
+      </div>`;
+    }
+
+    if (type === 'calls') {
+      if (item.phone) meta += `<span class="item-tag">📞 ${item.phone}</span>`;
+      if (item.company) meta += `<span class="item-tag">${item.company}</span>`;
+      if (item.subject) extra = `<div class="item-notes">${item.subject}</div>`;
+      return `<div class="item-card">
+        <div class="item-check ${item.done ? 'done' : ''}" onclick="toggleDone('calls','${item.id}',${item.done})"></div>
+        <div class="item-body"><div class="item-title ${item.done ? 'done' : ''}">${item.title}</div><div class="item-meta">${meta}</div>${extra}</div>
+        <div class="item-actions"><button class="icon-btn del" onclick="deleteItem('calls','${item.id}')">🗑</button></div>
+      </div>`;
+    }
+
+    if (type === 'contacts') {
+      if (item.phone) meta += `<span class="item-tag">📞 ${item.phone}</span>`;
+      if (item.email) meta += `<span class="item-tag">✉ ${item.email}</span>`;
+      if (item.company) meta += `<span class="item-tag">${item.company}</span>`;
+      return `<div class="item-card">
+        <div class="item-body"><div class="item-title">${item.title}</div><div class="item-meta">${meta}</div></div>
+        <div class="item-actions"><button class="icon-btn del" onclick="deleteItem('contacts','${item.id}')">🗑</button></div>
+      </div>`;
+    }
+
+    if (type === 'thoughts') {
+      const d = new Date(item.createdAt);
+      meta = `<span class="item-tag date">${d.toLocaleDateString('fr-FR')}</span>`;
+      return `<div class="item-card">
+        <div class="item-body"><div class="item-title">${item.title}</div><div class="item-meta">${meta}</div></div>
+        <div class="item-actions"><button class="icon-btn del" onclick="deleteItem('thoughts','${item.id}')">🗑</button></div>
+      </div>`;
+    }
+    if (type === 'needs') {
+      if (item.priority) meta += `<span class="item-tag ${item.priority}">${item.priority === 'urgent' ? '🔴 Urgent' : item.priority === 'normal' ? '🔵 Normal' : '🟢 Faible'}</span>`;
+      if (item.dept) meta += `<span class="item-tag">🏢 ${item.dept}</span>`;
+      return `<div class="item-card">
+        <div class="item-body"><div class="item-title">${item.title}</div><div class="item-meta">${meta}</div>${item.notes ? `<div class="item-notes">${item.notes}</div>` : ''}</div>
+        <div class="item-actions"><button class="icon-btn del" onclick="deleteItem('needs','${item.id}')">🗑</button></div>
+      </div>`;
+    }
+    return '';
+}
+
+// ---- BADGES ----
+function updateBadges() {
+  const map = { tasks:'nb-tasks', orders:'nb-orders', rdv:'nb-rdv', situations:'nb-sit', calls:'nb-calls', contacts:'nb-contacts', thoughts:'nb-thoughts', needs:'nb-needs' };
+  Object.entries(map).forEach(([key, elId]) => {
+    document.getElementById(elId).textContent = store[key].length;
+  });
+  document.getElementById('ds-tasks').textContent = store.tasks.filter(t=>!t.done).length;
+  document.getElementById('ds-orders').textContent = store.orders.length;
+  document.getElementById('ds-rdv').textContent = store.rdv.length;
+  document.getElementById('ds-sit').textContent = store.situations.filter(s=>s.status==='open').length;
+  document.getElementById('ds-calls').textContent = store.calls.filter(c=>!c.done).length;
+  document.getElementById('ds-contacts').textContent = store.contacts.length;
+}
+
+// ---- DASHBOARD ----
+function renderDashboard() {
+  const renderDash = (containerId, items, max = 4) => {
+    const el = document.getElementById(containerId);
+    if (!items.length) { el.innerHTML = '<div class="dash-empty">Aucun élément</div>'; return; }
+    el.innerHTML = items.slice(0, max).map(i => `<div class="dash-item"><div class="dash-dot"></div>${i.title}</div>`).join('');
+  };
+  renderDash('dash-tasks-body', store.tasks.filter(t=>!t.done));
+  renderDash('dash-sit-body', store.situations.filter(s=>s.status==='open'));
+  renderDash('dash-rdv-body', store.rdv);
+  renderDash('dash-calls-body', store.calls.filter(c=>!c.done));
+}
+
+// Handle Enter key
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.tagName === 'INPUT') {
+    const view = document.querySelector('.view.active');
+    if (view) {
+      const btn = view.querySelector('.btn-primary');
+      if (btn) btn.click();
+    }
+  }
+});
 </script>
 </body>
 </html>
