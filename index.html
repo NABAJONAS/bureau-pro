@@ -6,11 +6,10 @@
 <title>Bureau Pro — Basile</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
 
-<!-- Firebase SDK -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, updateDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
+<!-- Firebase SDK compat -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+<script>
   const firebaseConfig = {
     apiKey: "AIzaSyDrrAj3cpSvdZVultT90Uxmp5j_iWGkNj8",
     authDomain: "bureau-pro-nabajonas.firebaseapp.com",
@@ -19,21 +18,8 @@
     messagingSenderId: "507494919517",
     appId: "1:507494919517:web:30a71533630b169f5f0cb4"
   };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-  window.db = db;
-  window.fbCollection = collection;
-  window.fbAddDoc = addDoc;
-  window.fbGetDocs = getDocs;
-  window.fbDeleteDoc = deleteDoc;
-  window.fbDoc = doc;
-  window.fbUpdateDoc = updateDoc;
-  window.fbOnSnapshot = onSnapshot;
-  window.fbQuery = query;
-  window.fbOrderBy = orderBy;
-
-  window.dispatchEvent(new Event('firebase-ready'));
+  firebase.initializeApp(firebaseConfig);
+  window.db = firebase.firestore();
 </script>
 
 <style>
@@ -588,14 +574,13 @@ function setSyncStatus(state) {
 }
 
 // ---- FIREBASE INTEGRATION ----
-window.addEventListener('firebase-ready', () => {
+function initFirebase() {
   setSyncStatus('ok');
   const db = window.db;
   const collections = ['tasks','orders','rdv','situations','calls','contacts','thoughts','needs'];
   
   collections.forEach(colName => {
-    const colRef = window.fbCollection(db, colName);
-    window.fbOnSnapshot(colRef, (snapshot) => {
+    db.collection(colName).onSnapshot((snapshot) => {
       store[colName] = [];
       snapshot.forEach(doc => {
         store[colName].push({ id: doc.id, ...doc.data() });
@@ -604,8 +589,14 @@ window.addEventListener('firebase-ready', () => {
       renderList(colName);
       updateBadges();
       renderDashboard();
-    });
+    }, (err) => { setSyncStatus('error'); console.error(err); });
   });
+}
+
+// Start Firebase when page loads
+window.addEventListener('load', () => {
+  if (window.db) { initFirebase(); }
+  else { setSyncStatus('error'); }
 });
 
 // ---- ADD ITEM ----
@@ -670,7 +661,7 @@ async function addItem(type) {
   }
 
   try {
-    await window.fbAddDoc(window.fbCollection(db, type), data);
+    await window.db.collection(type).add(data);
     setSyncStatus('ok');
   } catch(e) { setSyncStatus('error'); console.error(e); }
 }
@@ -679,7 +670,7 @@ async function addItem(type) {
 async function deleteItem(type, id) {
   setSyncStatus('syncing');
   try {
-    await window.fbDeleteDoc(window.fbDoc(window.db, type, id));
+    await window.db.collection(type).doc(id).delete();
     setSyncStatus('ok');
   } catch(e) { setSyncStatus('error'); }
 }
@@ -688,7 +679,7 @@ async function deleteItem(type, id) {
 async function toggleDone(type, id, current) {
   setSyncStatus('syncing');
   try {
-    await window.fbUpdateDoc(window.fbDoc(window.db, type, id), { done: !current });
+    await window.db.collection(type).doc(id).update({ done: !current });
     setSyncStatus('ok');
   } catch(e) { setSyncStatus('error'); }
 }
